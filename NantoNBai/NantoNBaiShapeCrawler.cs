@@ -17,8 +17,9 @@ namespace NantoNBai
             var title = (IAutoShape)slide.Shapes.First(sp => sp is IAutoShape);
             var chart = (IChart)slide.Shapes.First(sp => sp is IChart);
 
+            //title.TextFrame.Paragraphs[0].Text = $"なんと{target}が{Math.Floor(to / from)}倍に！";
+            title.TextFrame.AutofitType = SCAutofitType.None;
             title.TextFrame.Text = $"なんと{target}が{Math.Floor(to / from)}倍に！";
-            title.TextFrame.AutofitType = SCAutofitType.Resize;
 
             chart.SeriesCollection[0].Points[0].Value = from;
             chart.SeriesCollection[1].Points[0].Value = to;
