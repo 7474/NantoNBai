@@ -21,20 +21,20 @@ namespace NantoNBaiFunction
         public NantoNBaiFunction(ILogger<NantoNBaiFunction> log)
         {
             _logger = log;
-            _nantoNBaiService = new NantoNBaiOpenXML();
+            _nantoNBaiService = new NantoNBaiShapeCrawler();
         }
 
-        [FunctionName("Function1")]
+        [FunctionName("Generate")]
         [OpenApiOperation(operationId: "Run", tags: new[] { "name" })]
         [OpenApiSecurity("function_key", SecuritySchemeType.ApiKey, Name = "code", In = OpenApiSecurityLocationType.Query)]
         [OpenApiParameter(name: "name", In = ParameterLocation.Query, Required = true, Type = typeof(string), Description = "The **Name** parameter")]
         [OpenApiParameter(name: "from", In = ParameterLocation.Query, Required = true, Type = typeof(double), Description = "The **From** parameter")]
         [OpenApiParameter(name: "to", In = ParameterLocation.Query, Required = true, Type = typeof(double), Description = "The **To** parameter")]
         [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "text/plain", bodyType: typeof(string), Description = "The OK response")]
-        public async Task<IActionResult> Run(
+        public async Task<IActionResult> Generate(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req)
         {
-            _logger.LogInformation("C# HTTP trigger function processed a request.");
+            _logger.LogInformation($"C# HTTP trigger function processed a request. query: {req.QueryString}");
 
             string name = req.Query["name"];
             var from = double.Parse(req.Query["from"]);
