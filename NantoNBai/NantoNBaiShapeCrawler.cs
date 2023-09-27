@@ -11,7 +11,7 @@ namespace NantoNBai
         {
             // XXX check contentType
 
-            var pres = SCPresentation.Open("nanto-n-bai-template.pptx");
+            using var pres = SCPresentation.Open("nanto-n-bai-template.pptx");
             var slide = pres.Slides.First();
 
             var title = (IAutoShape)slide.Shapes.First(sp => sp is IAutoShape);
