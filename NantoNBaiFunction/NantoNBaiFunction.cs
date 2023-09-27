@@ -1,6 +1,3 @@
-using System.IO;
-using System.Net;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -9,23 +6,30 @@ using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
 using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Enums;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
-using Newtonsoft.Json;
+using NantoNBai;
+using System.IO;
+using System.Net;
+using System.Threading.Tasks;
 
 namespace NantoNBaiFunction
 {
-    public class Function1
+    public class NantoNBaiFunction
     {
-        private readonly ILogger<Function1> _logger;
+        private readonly ILogger<NantoNBaiFunction> _logger;
+        private readonly INantoNBaiService _nantoNBaiService;
 
-        public Function1(ILogger<Function1> log)
+        public NantoNBaiFunction(ILogger<NantoNBaiFunction> log)
         {
             _logger = log;
+            _nantoNBaiService = new NantoNBaiOpenXML();
         }
 
         [FunctionName("Function1")]
         [OpenApiOperation(operationId: "Run", tags: new[] { "name" })]
         [OpenApiSecurity("function_key", SecuritySchemeType.ApiKey, Name = "code", In = OpenApiSecurityLocationType.Query)]
         [OpenApiParameter(name: "name", In = ParameterLocation.Query, Required = true, Type = typeof(string), Description = "The **Name** parameter")]
+        [OpenApiParameter(name: "from", In = ParameterLocation.Query, Required = true, Type = typeof(double), Description = "The **From** parameter")]
+        [OpenApiParameter(name: "to", In = ParameterLocation.Query, Required = true, Type = typeof(double), Description = "The **To** parameter")]
         [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "text/plain", bodyType: typeof(string), Description = "The OK response")]
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req)
@@ -33,16 +37,15 @@ namespace NantoNBaiFunction
             _logger.LogInformation("C# HTTP trigger function processed a request.");
 
             string name = req.Query["name"];
+            var from = double.Parse(req.Query["from"]);
+            var to = double.Parse(req.Query["to"]);
 
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            dynamic data = JsonConvert.DeserializeObject(requestBody);
-            name = name ?? data?.name;
+            var ms = _nantoNBaiService.Generate(name, from, to, "application/vnd.openxmlformats-officedocument.presentationml.presentation");
 
-            string responseMessage = string.IsNullOrEmpty(name)
-                ? "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response."
-                : $"Hello, {name}. This HTTP triggered function executed successfully.";
-
-            return new OkObjectResult(responseMessage);
+            return new FileStreamResult(ms, "application/octet-stream")
+            {
+                FileDownloadName = $"{name}.pptx"
+            };
         }
     }
 }
