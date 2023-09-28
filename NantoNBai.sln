@@ -5,7 +5,7 @@ VisualStudioVersion = 17.5.33530.505
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NantoNBaiFunction", "NantoNBaiFunction\NantoNBaiFunction.csproj", "{1BE49464-85E2-493D-AA14-7784986CECA0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NantoNBai", "NantoNBai\NantoNBai.csproj", "{9F0D5B98-EA17-40C6-84AC-9312526A750D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NantoNBai", "NantoNBai\NantoNBai.csproj", "{9F0D5B98-EA17-40C6-84AC-9312526A750D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,17 +1,17 @@
-name: .NET Core アプリケーションを関数アプリ NantoNBaiFunction20230928043720 にビルドしてデプロイする
+name: Deploy to Azure Function Linux
 on:
   push:
     branches:
     - master
 env:
-  AZURE_FUNCTIONAPP_NAME: NantoNBaiFunction20230928043720
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: NantoNBaiFunction
+  AZURE_FUNCTIONAPP_NAME: NantoNBaiFunction
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: NantoNBaiFunction/
   CONFIGURATION: Release
   DOTNET_CORE_VERSION: 6.0.x
   WORKING_DIRECTORY: NantoNBaiFunction
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - name: Setup .NET SDK
@@ -30,7 +30,7 @@ jobs:
         name: functionapp
         path: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
   deploy:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     needs: build
     steps:
     - name: Download artifact from build job
@@ -42,5 +42,5 @@ jobs:
       uses: Azure/functions-action@v1
       with:
         app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
-        publish-profile: ${{ secrets.NantoNBaiFunction20230928043720_2B84 }}
+        publish-profile: ${{ secrets.NantoNBaiFunction_FDF0 }}
         package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
