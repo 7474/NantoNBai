@@ -27,23 +27,23 @@ namespace NantoNBaiFunction
         }
 
         [FunctionName("Generate")]
-        [OpenApiOperation(operationId: "Run", tags: new[] { "name" })]
+        [OpenApiOperation(operationId: "Generate", tags: new[] { "name" })]
         //[OpenApiSecurity("function_key", SecuritySchemeType.ApiKey, Name = "code", In = OpenApiSecurityLocationType.Query)]
         [OpenApiParameter(name: "name", In = ParameterLocation.Query, Required = true, Type = typeof(string), Description = "The **Name** parameter")]
         [OpenApiParameter(name: "from", In = ParameterLocation.Query, Required = true, Type = typeof(double), Description = "The **From** parameter")]
         [OpenApiParameter(name: "to", In = ParameterLocation.Query, Required = true, Type = typeof(double), Description = "The **To** parameter")]
         [OpenApiParameter(name: "format", In = ParameterLocation.Query, Required = true, Type = typeof(string), Description = "The **Format** parameter")]
-        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "text/plain", bodyType: typeof(string), Description = "The OK response")]
+        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/octet-stream", bodyType: typeof(string), Description = "The OK response")]
         public async Task<IActionResult> Generate(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
-            ExecutionContext executionContext)
+            ExecutionContext executionContext,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Generate.{format:alpha}")] HttpRequest req,
+            string format)
         {
-            _logger.LogInformation($"C# HTTP trigger function processed a request. query: {req.QueryString}");
+            _logger.LogInformation($"C# HTTP trigger function processed a request. path: {req.Path}, query: {req.QueryString}");
 
             string name = req.Query["name"];
             var from = double.Parse(req.Query["from"]);
             var to = double.Parse(req.Query["to"]);
-            var format = req.Query["format"];
 
             var ms = _nantoNBaiService.Generate(executionContext.FunctionAppDirectory, name, from, to, "application/vnd.openxmlformats-officedocument.presentationml.presentation");
 
