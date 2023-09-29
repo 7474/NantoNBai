@@ -4,7 +4,8 @@
 
 https://speakerdeck.com/papix/hatena-engineer-seminar-number-10?slide=52
 
->![image](https://github.com/7474/NantoNBai/assets/4744735/f3f4772c-ebcc-4ff3-a1e5-a10c7dff9166)
+>![image](https://github.com/7474/NantoNBai/assets/4744735/4f88a511-e351-457d-8c49-8bbb66d6be08)
+
 
 常々気軽にこのようなグラフを作成したいと思っていました。
 
