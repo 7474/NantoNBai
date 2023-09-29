@@ -51,6 +51,8 @@ sequenceDiagram
 
 そのため、グラフはPowerPoint互換で生成し、適当にWebブラウザで表示できる形式に変換しました。
 
+FaaS...[Azure Functions](https://learn.microsoft.com/ja-jp/azure/azure-functions/functions-overview)の関数で生成、その結果をCDN...[Front Door](https://learn.microsoft.com/en-us/azure/frontdoor/front-door-overview)でキャッシュが素直な構成でしょう。
+
 当初は低レイヤな OpenXML SDK を用いて生成を試みていましたが、[異様に難解](https://learn.microsoft.com/ja-jp/office/open-xml/working-with-presentations)だったので諦めました。
 
 ありがとう [ShapeCrawler](https://github.com/ShapeCrawler/ShapeCrawler)。
