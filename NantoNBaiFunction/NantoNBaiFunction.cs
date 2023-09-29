@@ -3,12 +3,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
-using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Enums;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using NantoNBai;
+using System;
 using System.IO;
 using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace NantoNBaiFunction
@@ -27,7 +28,7 @@ namespace NantoNBaiFunction
         }
 
         [FunctionName(nameof(Generate))]
-        [OpenApiOperation("Generate")]
+        [OpenApiOperation("Generate", "Gurafu")]
         [OpenApiParameter(name: "name", In = ParameterLocation.Query, Required = true, Type = typeof(string), Description = "The **Name** parameter")]
         [OpenApiParameter(name: "from", In = ParameterLocation.Query, Required = true, Type = typeof(double), Description = "The **From** parameter")]
         [OpenApiParameter(name: "to", In = ParameterLocation.Query, Required = true, Type = typeof(double), Description = "The **To** parameter")]
@@ -63,6 +64,31 @@ namespace NantoNBaiFunction
             {
                 FileDownloadName = $"{name}.pptx"
             };
+        }
+
+        [FunctionName(nameof(Viewer))]
+        [OpenApiOperation("Viewer", "Gurafu")]
+        [OpenApiParameter(name: "name", In = ParameterLocation.Query, Required = true, Type = typeof(string), Description = "The **Name** parameter")]
+        [OpenApiParameter(name: "from", In = ParameterLocation.Query, Required = true, Type = typeof(double), Description = "The **From** parameter")]
+        [OpenApiParameter(name: "to", In = ParameterLocation.Query, Required = true, Type = typeof(double), Description = "The **To** parameter")]
+        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "text/html", bodyType: typeof(string))]
+        public async Task<IActionResult> Viewer(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Viewer")] HttpRequest req
+        )
+        {
+            _logger.LogInformation($"C# HTTP trigger function processed a request. path: {req.Path}, query: {req.QueryString}");
+
+            string name = req.Query["name"];
+            var from = double.Parse(req.Query["from"]);
+            var to = double.Parse(req.Query["to"]);
+
+            return new FileContentResult(Encoding.UTF8.GetBytes($"<html lang=\"ja\"><head>" +
+                $"<meta charset=\"UTF-8\">" +
+                $"<meta property=\"og:title\" content=\"{name}‚ª{Math.Floor(to / from)}”{!!!\">" +
+                $"<meta property=\"og:image\" content=\"https://{req.Host}/api/Generate.png{req.QueryString}\">" +
+                $"</head><body>" +
+                $"<img src=\"https://{req.Host}/api/Generate.png{req.QueryString}\">" +
+                $"</body></html>"), "text/html");
         }
     }
 }
