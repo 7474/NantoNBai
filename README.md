@@ -22,6 +22,9 @@ https://speakerdeck.com/papix/hatena-engineer-seminar-number-10?slide=52
 
 再現度はあまり高くないのでもうすよし「ヨセ」たいと考えています。
 
+以下のようなURLで共有可能です。
+
+https://n-bai.koudenpa.dev/api/Viewer?name=ポート番号&from=80&to=443
 
 ## API Spec
 
