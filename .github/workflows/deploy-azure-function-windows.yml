@@ -42,5 +42,5 @@ jobs:
       uses: Azure/functions-action@v1
       with:
         app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
-        publish-profile: ${{ secrets.NantoNBaiFunction20230928043720_2B84 }}
+        publish-profile: ${{ secrets.NANTONBAIFUNCTION_W }}
         package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
