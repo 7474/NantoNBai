@@ -32,6 +32,19 @@ https://n-bai.koudenpa.dev/api/swagger.json
 
 ## Achitecture?
 
+```mermaid
+sequenceDiagram
+    UA->>CDN: GET Request
+    CDN->>Function: HTTP Trigger
+    Function->>ShapeCrawler: Read pptx template file
+    Function->>ShapeCrawler: Edit pptx data
+    Function->>Spire.Presentation: Convert pptx to image
+    Function->>CDN: "GURAFU" Image
+    CDN->>UA: "GURAFU" Image
+    Note over CDN: Azure Front Door
+    Note over Function: Azure Functions<br/>.NET6 on Windows
+```
+
 このようなグラフの良いところの一つには、オフィスソフトで「雑に」作られたグラフであるところがあります。
 
 その魅力をスポイルしてはなりません。
