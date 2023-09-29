@@ -87,6 +87,8 @@ namespace NantoNBaiFunction
                 $"<meta property=\"og:title\" content=\"{name}が{Math.Floor(to / from)}倍!!!\">" +
                 $"<meta property=\"og:description\" content=\"{name}が{Math.Floor(to / from)}倍!!!\">" +
                 $"<meta property=\"og:image\" content=\"https://{req.Host}/api/Generate.png{req.QueryString}\">" +
+                $"<meta name=\"twitter:image\" content=\"https://{req.Host}/api/Generate.png{req.QueryString}\">" +
+                $"<meta name=\"twitter:card\" content=\"summary_large_image\">" +
                 $"</head><body>" +
                 $"<img src=\"https://{req.Host}/api/Generate.png{req.QueryString}\">" +
                 $"</body></html>"), "text/html");
