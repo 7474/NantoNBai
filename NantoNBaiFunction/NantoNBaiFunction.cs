@@ -85,6 +85,7 @@ namespace NantoNBaiFunction
             return new FileContentResult(Encoding.UTF8.GetBytes($"<html lang=\"ja\"><head>" +
                 $"<meta charset=\"UTF-8\">" +
                 $"<meta property=\"og:title\" content=\"{name}が{Math.Floor(to / from)}倍!!!\">" +
+                $"<meta property=\"og:description\" content=\"{name}が{Math.Floor(to / from)}倍!!!\">" +
                 $"<meta property=\"og:image\" content=\"https://{req.Host}/api/Generate.png{req.QueryString}\">" +
                 $"</head><body>" +
                 $"<img src=\"https://{req.Host}/api/Generate.png{req.QueryString}\">" +
