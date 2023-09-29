@@ -35,7 +35,7 @@ https://nanto-n-bai-w-f3eub2erhwekfde2.z01.azurefd.net/api/swagger/ui
 
 そのため、グラフはPowerPoint互換で生成し、適当にWebブラウザで表示できる形式に変換しました。
 
-当初は低レイヤな OpenXML SDK を用いて生成を試みていましたが、異様に難解だったので諦めました。
+当初は低レイヤな OpenXML SDK を用いて生成を試みていましたが、[異様に難解](https://learn.microsoft.com/ja-jp/office/open-xml/working-with-presentations)だったので諦めました。
 
 ありがとう [ShapeCrawler](https://github.com/ShapeCrawler/ShapeCrawler)。
 
