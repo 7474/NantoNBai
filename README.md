@@ -26,8 +26,6 @@ https://speakerdeck.com/papix/hatena-engineer-seminar-number-10?slide=52
 
 https://nanto-n-bai-w-f3eub2erhwekfde2.z01.azurefd.net/api/swagger/ui
 
-残念ながら上記のUIでは正しいリクエストを発行できません。感じてください。
-
 
 ## Achitecture
 

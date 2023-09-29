@@ -34,7 +34,7 @@ namespace NantoNBaiFunction
         [OpenApiParameter(name: "format", In = ParameterLocation.Path, Required = true, Type = typeof(ConvertFormat), Description = "The **Format** parameter")]
         [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/octet-stream", bodyType: typeof(byte[]))]
         public async Task<IActionResult> Generate(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Generate.{format:alpha}")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Generate.{format}")] HttpRequest req,
             string format,
             ExecutionContext executionContext
         )
