@@ -53,7 +53,7 @@ namespace NantoNBaiFunction
             {
                 var imageFileStream = _converter.ConvertFromPptx(ms, convertFormat);
                 ms.Dispose();
-                // XXX MemoryStream ‚ª•Ô‚Á‚Ä‚­‚é‚±‚Æ‚Í’m‚Á‚Ä‚é‚¯‚ê‚Ç‚È[Bbyte[]•Ô‹p‚Å‚¢‚¢‚©‚àB
+                // XXX MemoryStream ãŒè¿”ã£ã¦ãã‚‹ã“ã¨ã¯çŸ¥ã£ã¦ã‚‹ã‘ã‚Œã©ãªãƒ¼ã€‚byte[]è¿”å´ã§ã„ã„ã‹ã‚‚ã€‚
                 using var ms2 = new MemoryStream();
                 await imageFileStream.CopyToAsync(ms2);
 
@@ -84,7 +84,7 @@ namespace NantoNBaiFunction
 
             return new FileContentResult(Encoding.UTF8.GetBytes($"<html lang=\"ja\"><head>" +
                 $"<meta charset=\"UTF-8\">" +
-                $"<meta property=\"og:title\" content=\"{name}‚ª{Math.Floor(to / from)}”{!!!\">" +
+                $"<meta property=\"og:title\" content=\"{name}ãŒ{Math.Floor(to / from)}å€!!!\">" +
                 $"<meta property=\"og:image\" content=\"https://{req.Host}/api/Generate.png{req.QueryString}\">" +
                 $"</head><body>" +
                 $"<img src=\"https://{req.Host}/api/Generate.png{req.QueryString}\">" +
