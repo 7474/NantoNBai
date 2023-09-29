@@ -1,6 +1,8 @@
-﻿using Spire.Presentation;
+﻿using Newtonsoft.Json.Converters;
+using Spire.Presentation;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Runtime.Serialization;
 
 namespace NantoNBai
 {
@@ -38,10 +40,14 @@ namespace NantoNBai
         }
     }
 
+    [Newtonsoft.Json.JsonConverter(typeof(StringEnumConverter))]
     public enum ConvertFormat
     {
+        [EnumMember(Value = "pptx")]
         Pptx,
+        [EnumMember(Value = "svg")]
         Svg,
+        [EnumMember(Value = "png")]
         Png
     }
 }
