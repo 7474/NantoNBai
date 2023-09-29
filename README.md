@@ -16,16 +16,18 @@ https://speakerdeck.com/papix/hatena-engineer-seminar-number-10?slide=52
 
 以下のようなURLをゲットします。
 
-`https://nanto-n-bai-w-f3eub2erhwekfde2.z01.azurefd.net/api/Generate.png?name=ポート番号&from=80&to=443`
+`https://n-bai.koudenpa.dev/api/Generate.png?name=ポート番号&from=80&to=443`
 
->![image](https://nanto-n-bai-w-f3eub2erhwekfde2.z01.azurefd.net/api/Generate.png?name=ポート番号&from=80&to=443)
+>![image](https://n-bai.koudenpa.dev/api/Generate.png?name=ポート番号&from=80&to=443)
 
 再現度はあまり高くないのでもうすよし「ヨセ」たいと考えています。
 
 
 ## API Spec
 
-https://nanto-n-bai-w-f3eub2erhwekfde2.z01.azurefd.net/api/swagger/ui
+https://n-bai.koudenpa.dev/api/swagger/ui
+
+https://n-bai.koudenpa.dev/api/swagger.json
 
 
 ## Achitecture?
