@@ -44,20 +44,19 @@ namespace NantoNBaiFunction
             string name = req.Query["name"];
             var from = double.Parse(req.Query["from"]);
             var to = double.Parse(req.Query["to"]);
+            var convertFormat = (ConvertFormat)System.Enum.Parse(typeof(ConvertFormat), format, true);
 
             var ms = _nantoNBaiService.Generate(executionContext.FunctionAppDirectory, name, from, to, "application/vnd.openxmlformats-officedocument.presentationml.presentation");
 
-            // XXX もうちょいどうにかする
-            format = format.ToLower();
-            if (format == "svg" || format == "png")
+            if (convertFormat != ConvertFormat.Pptx)
             {
-                var imageFileStream = _converter.ConvertFromPptx(ms, format == "svg" ? ConvertFormat.Svg : ConvertFormat.Png);
+                var imageFileStream = _converter.ConvertFromPptx(ms, convertFormat);
                 ms.Dispose();
                 // XXX MemoryStream が返ってくることは知ってるけれどなー。byte[]返却でいいかも。
                 using var ms2 = new MemoryStream();
                 await imageFileStream.CopyToAsync(ms2);
 
-                return new FileContentResult(ms2.ToArray(), format == "svg" ? "image/svg+xml" : "image/png");
+                return new FileContentResult(ms2.ToArray(), convertFormat == ConvertFormat.Svg ? "image/svg+xml" : "image/png");
             }
 
             return new FileStreamResult(ms, "application/octet-stream")
