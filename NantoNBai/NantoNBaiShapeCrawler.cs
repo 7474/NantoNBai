@@ -7,11 +7,11 @@ namespace NantoNBai
 {
     public class NantoNBaiShapeCrawler : INantoNBaiService
     {
-        public Stream Generate(string target, double from, double to, string contentType)
+        public Stream Generate(string baseDirectoryPath, string target, double from, double to, string contentType)
         {
             // XXX check contentType
 
-            using var pres = SCPresentation.Open("nanto-n-bai-template.pptx");
+            using var pres = SCPresentation.Open(Path.Combine(baseDirectoryPath, "nanto-n-bai-template.pptx"));
             var slide = pres.Slides.First();
 
             var title = (IAutoShape)slide.Shapes.First(sp => sp is IAutoShape);

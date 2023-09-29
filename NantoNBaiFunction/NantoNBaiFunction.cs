@@ -35,7 +35,8 @@ namespace NantoNBaiFunction
         [OpenApiParameter(name: "format", In = ParameterLocation.Query, Required = true, Type = typeof(string), Description = "The **Format** parameter")]
         [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "text/plain", bodyType: typeof(string), Description = "The OK response")]
         public async Task<IActionResult> Generate(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
+            ExecutionContext executionContext)
         {
             _logger.LogInformation($"C# HTTP trigger function processed a request. query: {req.QueryString}");
 
@@ -44,7 +45,7 @@ namespace NantoNBaiFunction
             var to = double.Parse(req.Query["to"]);
             var format = req.Query["format"];
 
-            var ms = _nantoNBaiService.Generate(name, from, to, "application/vnd.openxmlformats-officedocument.presentationml.presentation");
+            var ms = _nantoNBaiService.Generate(executionContext.FunctionAppDirectory, name, from, to, "application/vnd.openxmlformats-officedocument.presentationml.presentation");
 
             if (format == "svg")
             {
