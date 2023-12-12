@@ -7,7 +7,7 @@ namespace NantoNBai
 {
     public class NantoNBaiShapeCrawler : INantoNBaiService
     {
-        public Stream Generate(string baseDirectoryPath, string target, double from, double to, string contentType)
+        public Stream Generate(string baseDirectoryPath, string target, double from, double to, Nan nan, string contentType)
         {
             // XXX check contentType
 
@@ -19,7 +19,7 @@ namespace NantoNBai
 
             //title.TextFrame.Paragraphs[0].Text = $"なんと{target}が{Math.Floor(to / from)}倍に！";
             title.TextFrame.AutofitType = SCAutofitType.None;
-            title.TextFrame.Text = $"なんと{target}が{Math.Floor(to / from)}倍に！";
+            title.TextFrame.Text = $"なんと{target}が{new Formatter().Format(from, to, nan)}に！";
 
             chart.SeriesCollection[0].Points[0].Value = from;
             chart.SeriesCollection[1].Points[0].Value = to;

@@ -13,7 +13,7 @@ namespace NantoNBai
 {
     public class NantoNBaiOpenXML : INantoNBaiService
     {
-        public Stream Generate(string baseDirectoryPath, string target, double from, double to, string contentType)
+        public Stream Generate(string baseDirectoryPath, string target, double from, double to, Nan nan, string contentType)
         {
             // XXX check contentType
             var ms = new MemoryStream();
