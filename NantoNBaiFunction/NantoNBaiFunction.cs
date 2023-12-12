@@ -102,7 +102,8 @@ namespace NantoNBaiFunction
                 $"<meta name=\"twitter:image\" content=\"https://{req.Host}/api/Generate.png{req.QueryString}\">" +
                 $"<meta name=\"twitter:card\" content=\"summary_large_image\">" +
                 $"</head><body>" +
-                $"<img src=\"https://{req.Host}/api/Generate.png{req.QueryString}\">" +
+                $"<div><img src=\"https://{req.Host}/api/Generate.png{req.QueryString}\"></div>" +
+                $"<div><a href=\"https://github.com/7474/NantoNBai\">https://github.com/7474/NantoNBai</a></div>" +
                 $"</body></html>"), "text/html");
         }
     }
