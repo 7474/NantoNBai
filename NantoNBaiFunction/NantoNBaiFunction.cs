@@ -8,6 +8,7 @@ using Microsoft.OpenApi.Models;
 using NantoNBai;
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
@@ -32,6 +33,7 @@ namespace NantoNBaiFunction
         [OpenApiParameter(name: "name", In = ParameterLocation.Query, Required = true, Type = typeof(string), Description = "The **Name** parameter")]
         [OpenApiParameter(name: "from", In = ParameterLocation.Query, Required = true, Type = typeof(double), Description = "The **From** parameter")]
         [OpenApiParameter(name: "to", In = ParameterLocation.Query, Required = true, Type = typeof(double), Description = "The **To** parameter")]
+        [OpenApiParameter(name: "nan", In = ParameterLocation.Query, Required = false, Type = typeof(Nan), Description = "The **Nan** parameter")]
         [OpenApiParameter(name: "format", In = ParameterLocation.Path, Required = true, Type = typeof(ConvertFormat), Description = "The **Format** parameter")]
         [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/octet-stream", bodyType: typeof(byte[]))]
         public async Task<IActionResult> Generate(
@@ -46,8 +48,15 @@ namespace NantoNBaiFunction
             var from = double.Parse(req.Query["from"]);
             var to = double.Parse(req.Query["to"]);
             var convertFormat = (ConvertFormat)System.Enum.Parse(typeof(ConvertFormat), format, true);
+            var nan = (Nan)System.Enum.Parse(typeof(Nan), req.Query["nan"].FirstOrDefault() ?? "bai", true);
 
-            var ms = _nantoNBaiService.Generate(executionContext.FunctionAppDirectory, name, from, to, "application/vnd.openxmlformats-officedocument.presentationml.presentation");
+            var ms = _nantoNBaiService.Generate(
+                executionContext.FunctionAppDirectory,
+                name,
+                from, 
+                to, 
+                nan,
+                "application/vnd.openxmlformats-officedocument.presentationml.presentation");
 
             if (convertFormat != ConvertFormat.Pptx)
             {
@@ -71,6 +80,7 @@ namespace NantoNBaiFunction
         [OpenApiParameter(name: "name", In = ParameterLocation.Query, Required = true, Type = typeof(string), Description = "The **Name** parameter")]
         [OpenApiParameter(name: "from", In = ParameterLocation.Query, Required = true, Type = typeof(double), Description = "The **From** parameter")]
         [OpenApiParameter(name: "to", In = ParameterLocation.Query, Required = true, Type = typeof(double), Description = "The **To** parameter")]
+        [OpenApiParameter(name: "nan", In = ParameterLocation.Query, Required = false, Type = typeof(Nan), Description = "The **Nan** parameter")]
         [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "text/html", bodyType: typeof(string))]
         public async Task<IActionResult> Viewer(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Viewer")] HttpRequest req
@@ -81,11 +91,13 @@ namespace NantoNBaiFunction
             string name = req.Query["name"];
             var from = double.Parse(req.Query["from"]);
             var to = double.Parse(req.Query["to"]);
+            var nan = (Nan)System.Enum.Parse(typeof(Nan), req.Query["nan"].FirstOrDefault() ?? "bai", true);
+            var bai = new Formatter().Format(from, to, nan);
 
             return new FileContentResult(Encoding.UTF8.GetBytes($"<html lang=\"ja\"><head>" +
                 $"<meta charset=\"UTF-8\">" +
-                $"<meta property=\"og:title\" content=\"{name}が{Math.Floor(to / from)}倍!!!\">" +
-                $"<meta property=\"og:description\" content=\"{name}が{Math.Floor(to / from)}倍!!!\">" +
+                $"<meta property=\"og:title\" content=\"{name}が{bai}!!!\">" +
+                $"<meta property=\"og:description\" content=\"{name}が{bai}!!!\">" +
                 $"<meta property=\"og:image\" content=\"https://{req.Host}/api/Generate.png{req.QueryString}\">" +
                 $"<meta name=\"twitter:image\" content=\"https://{req.Host}/api/Generate.png{req.QueryString}\">" +
                 $"<meta name=\"twitter:card\" content=\"summary_large_image\">" +
