@@ -106,6 +106,31 @@ namespace NantoNBaiFunction
                 $"<div><a href=\"https://github.com/7474/NantoNBai\">https://github.com/7474/NantoNBai</a></div>" +
                 $"</body></html>"), "text/html");
         }
+
+        [FunctionName(nameof(Index))]
+        public async Task<IActionResult> Index(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Index")] HttpRequest req
+        )
+        {
+            _logger.LogInformation($"C# HTTP trigger function processed a request. path: {req.Path}, query: {req.QueryString}");
+
+            return new FileContentResult(Encoding.UTF8.GetBytes($"<html lang=\"ja\"><head>" +
+                $"<meta charset=\"UTF-8\">" +
+                $"<meta property=\"og:title\" content=\"NantoNBai\">" +
+                $"<meta property=\"og:description\" content=\"なんと凄いグラフを作れます\">" +
+                $"<meta property=\"og:image\" content=\"https://n-bai.koudenpa.dev/api/Generate.png?name=%E3%83%9D%E3%83%BC%E3%83%88%E7%95%AA%E5%8F%B7&from=80&to=443\">" +
+                $"<meta name=\"twitter:image\" content=\"https://n-bai.koudenpa.dev/api/Generate.png?name=%E3%83%9D%E3%83%BC%E3%83%88%E7%95%AA%E5%8F%B7&from=80&to=443\">" +
+                $"<meta name=\"twitter:card\" content=\"summary_large_image\">" +
+                $"</head><body>" +
+                $"<h1>NantoNBai</h1>" +
+                $"<p>なんと凄いグラフを作れます</p>" +
+                $"<div><img src=\"https://n-bai.koudenpa.dev/api/Generate.png?name=%E3%83%9D%E3%83%BC%E3%83%88%E7%95%AA%E5%8F%B7&from=80&to=443\"></div>" +
+                $"<ul>" +
+                $"<li><a href=\"https://n-bai.koudenpa.dev/api/swagger/ui\">https://n-bai.koudenpa.dev/api/swagger/ui</a></li>" +
+                $"<li><a href=\"https://github.com/7474/NantoNBai\">https://github.com/7474/NantoNBai</a></li>" +
+                $"</ul>" +
+                $"</body></html>"), "text/html"); 
+        }
     }
 }
 
