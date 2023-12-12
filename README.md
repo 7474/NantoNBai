@@ -44,7 +44,7 @@ sequenceDiagram
     Function->>Spire.Presentation: Convert pptx to image
     Function->>CDN: "GURAFU" Image
     CDN->>UA: "GURAFU" Image
-    Note over CDN: Azure Front Door
+    Note over CDN: Azure CDN
     Note over Function: Azure Functions<br/>.NET6 on Windows
 ```
 
