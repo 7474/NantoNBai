@@ -96,15 +96,16 @@ namespace NantoNBaiFunction
             var nan = (Nan)System.Enum.Parse(typeof(Nan), req.Query["nan"].FirstOrDefault() ?? "bai", true);
             var bai = new Formatter().Format(from, to, nan);
 
+            // {req.Host} Funcion AppsのホストなのでCDNのホストどっかから取りたい
             return new FileContentResult(Encoding.UTF8.GetBytes($"<html lang=\"ja\"><head>" +
                 $"<meta charset=\"UTF-8\">" +
                 $"<meta property=\"og:title\" content=\"{name}が{bai}!!!\">" +
                 $"<meta property=\"og:description\" content=\"{name}が{bai}!!!\">" +
-                $"<meta property=\"og:image\" content=\"https://{req.Host}/api/Generate.png{req.QueryString}\">" +
-                $"<meta name=\"twitter:image\" content=\"https://{req.Host}/api/Generate.png{req.QueryString}\">" +
+                $"<meta property=\"og:image\" content=\"https://n-bai.koudenpa.dev/api/Generate.png{req.QueryString}\">" +
+                $"<meta name=\"twitter:image\" content=\"https://n-bai.koudenpa.dev/api/Generate.png{req.QueryString}\">" +
                 $"<meta name=\"twitter:card\" content=\"summary_large_image\">" +
                 $"</head><body>" +
-                $"<div><img src=\"https://{req.Host}/api/Generate.png{req.QueryString}\"></div>" +
+                $"<div><img src=\"https://n-bai.koudenpa.dev/api/Generate.png{req.QueryString}\"></div>" +
                 $"<div><a href=\"https://github.com/7474/NantoNBai\">https://github.com/7474/NantoNBai</a></div>" +
                 $"</body></html>"), "text/html");
         }
