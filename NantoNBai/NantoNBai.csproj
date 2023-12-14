@@ -11,6 +11,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="nanto-n-bai-template(1).pptx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="nanto-n-bai-template.pptx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
