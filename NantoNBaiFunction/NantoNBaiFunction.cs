@@ -57,9 +57,11 @@ namespace NantoNBaiFunction
                 using var ms2 = new MemoryStream();
                 await imageFileStream.CopyToAsync(ms2);
 
+                req.HttpContext.Response.Headers.Add("Cache-Control", "public, max-age=31536000");
                 return new FileContentResult(ms2.ToArray(), convertFormat == ConvertFormat.Svg ? "image/svg+xml" : "image/png");
             }
 
+            req.HttpContext.Response.Headers.Add("Cache-Control", "public, max-age=31536000");
             return new FileStreamResult(ms, "application/octet-stream")
             {
                 FileDownloadName = $"{name}.pptx"
