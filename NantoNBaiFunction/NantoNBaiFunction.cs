@@ -96,6 +96,7 @@ namespace NantoNBaiFunction
             var nan = (Nan)System.Enum.Parse(typeof(Nan), req.Query["nan"].FirstOrDefault() ?? "bai", true);
             var bai = new Formatter().Format(from, to, nan);
 
+            req.HttpContext.Response.Headers.Add("Cache-Control", "public, max-age=31536000");
             // {req.Host} Funcion AppsのホストなのでCDNのホストどっかから取りたい
             return new FileContentResult(Encoding.UTF8.GetBytes($"<html lang=\"ja\"><head>" +
                 $"<meta charset=\"UTF-8\">" +
@@ -117,6 +118,7 @@ namespace NantoNBaiFunction
         {
             _logger.LogInformation($"C# HTTP trigger function processed a request. path: {req.Path}, query: {req.QueryString}");
 
+            req.HttpContext.Response.Headers.Add("Cache-Control", "public, max-age=31536000");
             return new FileContentResult(Encoding.UTF8.GetBytes($"<html lang=\"ja\"><head>" +
                 $"<meta charset=\"UTF-8\">" +
                 $"<meta property=\"og:title\" content=\"NantoNBai\">" +
