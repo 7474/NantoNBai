@@ -9,8 +9,8 @@ namespace E2ETest
         [TestMethod]
         public async Task HomepageHasPlaywrightInTitleAndGetStartedLinkLinkingtoTheIntroPage()
         {
-            // https://n-bai.koudenpa.dev/api/Viewer?name=ポート番号&from=80&to=443
-            var res = await Page.GotoAsync("https://n-bai.koudenpa.dev/api/Generate.png?name=ポート番号&from=80&to=443");
+            // https://n-bai.koudenpa.dev/api/Viewer?name=繝昴�ｼ繝育分蜿ｷ&from=80&to=443
+            var res = await Page.GotoAsync("https://n-bai.koudenpa.dev/api/Generate.png?name=繝昴�ｼ繝育分蜿ｷ&from=80&to=443");
 
             var screenshot = await Page.ScreenshotAsync();
             using var expectedImage = SixLabors.ImageSharp.Image.Load("expect.png");
