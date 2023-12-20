@@ -1,4 +1,4 @@
-using Codeuctivity.ImageSharpCompare;
+﻿using Codeuctivity.ImageSharpCompare;
 
 namespace E2ETest
 {
