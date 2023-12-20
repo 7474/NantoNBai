@@ -1,4 +1,4 @@
-using Codeuctivity.ImageSharpCompare;
+﻿using Codeuctivity.ImageSharpCompare;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NantoNBai;
 using SixLabors.ImageSharp;
