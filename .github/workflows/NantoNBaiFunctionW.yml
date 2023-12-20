@@ -59,6 +59,6 @@ jobs:
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
-    - run: dotnet restore
-    - run: dotnet build --no-restore
+    - run: dotnet E2ETest/E2ETest.csproj restore
+    - run: dotnet build E2ETest/E2ETest.csproj --no-restore
     - run: dotnet test E2ETest/E2ETest.csproj --no-build --verbosity normal
