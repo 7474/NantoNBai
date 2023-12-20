@@ -39,7 +39,7 @@ namespace NantoNBaiTests
             //actualImage.Mutate(x => x.Resize(expectedImage.Width, expectedImage.Height));
             var calcDiff = ImageSharpCompare.CalcDiff(actualImage, expectedImage);
 
-            Assert.AreEqual(calcDiff.PixelErrorCount, 0);
+            Assert.AreEqual(0, calcDiff.PixelErrorCount);
         }
     }
 }
