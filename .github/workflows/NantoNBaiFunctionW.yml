@@ -1,14 +1,15 @@
-name: .NET Core アプリケーションを関数アプリ NantoNBaiFunctionW にビルドしてデプロイする
+name: CD
 on:
   push:
     branches:
-    - e2e
+    - master
 env:
   AZURE_FUNCTIONAPP_NAME: NantoNBaiFunctionW
   AZURE_FUNCTIONAPP_PACKAGE_PATH: NantoNBaiFunction\.
   CONFIGURATION: Release
   DOTNET_CORE_VERSION: 6.0.x
   WORKING_DIRECTORY: NantoNBaiFunction
+  DOTNET_VERSION: 8.x.x
 jobs:
   build:
     runs-on: windows-latest
@@ -44,3 +45,20 @@ jobs:
         app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
         publish-profile: ${{ secrets.NantoNBaiFunctionW_345A }}
         package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+  e2e:
+    runs-on: windows-latest
+    needs: deploy
+    steps:
+    - uses: actions/checkout@v4
+    
+    - uses: actions/setup-node@v3
+    - name: Install playwright browsers
+      run: npx playwright install-deps chromium
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    - run: dotnet restore
+    - run: dotnet build --no-restore
+    - run: dotnet test E2ETest/E2ETest.csproj --no-build --verbosity normal
