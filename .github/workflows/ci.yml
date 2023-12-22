@@ -29,3 +29,9 @@ jobs:
     - run: dotnet restore
     - run: dotnet build --no-restore
     - run: dotnet test NantoNBaiTests/NantoNBaiTests.csproj --no-build --verbosity normal
+    - name: Check result
+      if: failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: ci-result
+        path: actual.png
