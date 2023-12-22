@@ -1,4 +1,5 @@
 # NantoNBai
+[![E2E](https://github.com/7474/NantoNBai/actions/workflows/e2e.yml/badge.svg)](https://github.com/7474/NantoNBai/actions/workflows/e2e.yml)
 
 私はこのスライドに示されているグラフを愛しています。
 
