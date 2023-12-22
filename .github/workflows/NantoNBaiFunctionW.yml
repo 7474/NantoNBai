@@ -62,3 +62,10 @@ jobs:
     - run: dotnet restore E2ETest/E2ETest.csproj
     - run: dotnet build E2ETest/E2ETest.csproj --no-restore
     - run: dotnet test E2ETest/E2ETest.csproj --no-build --verbosity normal
+  
+    - name: Check result
+      if: failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: e2e-result
+        path: E2ETest/bin
