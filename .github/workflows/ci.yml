@@ -14,14 +14,6 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
-    - name: Install Yu Gothic Font
-      run: |
-        $ErrorActionPreference = 'Stop'
-        $ProgressPreference = 'SilentlyContinue'
-        Invoke-WebRequest -Uri 'https://github.com/microsoft/cascadia-code/releases/download/v2105.24/CascadiaCode-2105.24.zip' -OutFile 'CascadiaCode.zip'
-        Expand-Archive -Path 'CascadiaCode.zip' -DestinationPath '.'
-        $fonts = (New-Object -ComObject Shell.Application).Namespace(0x14)
-        dir *.ttf | %{ $fonts.CopyHere($_.fullname) }
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
