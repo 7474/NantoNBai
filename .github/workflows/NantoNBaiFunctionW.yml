@@ -32,6 +32,8 @@ jobs:
   deploy:
     runs-on: windows-latest
     needs: build
+    permissions:
+      id-token: write #This is required for requesting the JWT
     steps:
     - name: Download artifact from build job
       uses: actions/download-artifact@v3
@@ -42,6 +44,5 @@ jobs:
       uses: Azure/functions-action@v1
       with:
         app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
-        publish-profile: ${{ secrets.NantoNBaiFunctionW_345A }}
         package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
 
