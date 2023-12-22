@@ -1,4 +1,5 @@
 ﻿using Codeuctivity.ImageSharpCompare;
+using Newtonsoft.Json;
 using SixLabors.ImageSharp;
 
 namespace E2ETest
@@ -7,10 +8,16 @@ namespace E2ETest
     public class TestProduction : PageTest
     {
         [TestMethod]
-        public async Task HomepageHasPlaywrightInTitleAndGetStartedLinkLinkingtoTheIntroPage()
+        public async Task GenerateOnFunctionApp()
         {
             // https://n-bai.koudenpa.dev/api/Viewer?name=ポート番号&from=80&to=443
             var res = await Page.GotoAsync("https://nantonbaifunctionw.azurewebsites.net/api/Generate.png?name=ポート番号&from=80&to=443");
+
+            Console.WriteLine(JsonConvert.SerializeObject(res, new JsonSerializerSettings
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                Formatting = Formatting.Indented,
+            }));
 
             //var screenshot = await Page.ScreenshotAsync();
             using var expectedImage = SixLabors.ImageSharp.Image.Load("expect.png");
