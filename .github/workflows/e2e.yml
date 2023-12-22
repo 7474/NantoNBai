@@ -1,0 +1,37 @@
+name: E2E
+on:
+  workflow_run:
+    workflows:
+      - CD-workflow
+    branches:
+      - master
+    types: 
+      - completed
+  workflow_dispatch:
+env:
+  DOTNET_VERSION: 8.x.x
+jobs:
+  e2e:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    # - uses: actions/setup-node@v3
+    # - name: Install playwright browsers
+    #   run: npx playwright install-deps chromium
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    - run: dotnet restore E2ETest/E2ETest.csproj
+    - run: dotnet build E2ETest/E2ETest.csproj --no-restore
+    - run: pwsh E2ETest/bin/Debug/net8.0/playwright.ps1 install
+    - run: dotnet test E2ETest/E2ETest.csproj --no-build --verbosity normal
+  
+    - name: Check result
+      if: failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: e2e-result
+        path: E2ETest/bin
