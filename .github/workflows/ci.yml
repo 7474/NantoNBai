@@ -23,7 +23,7 @@ jobs:
     - run: dotnet test NantoNBaiTests/NantoNBaiTests.csproj --no-build --verbosity normal
     - name: Check result
       if: failure()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ci-result
         path: NantoNBaiTests/bin
