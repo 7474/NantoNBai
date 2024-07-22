@@ -36,7 +36,7 @@ jobs:
       id-token: write #This is required for requesting the JWT
     steps:
     - name: Login to Azure
-      uses: azure/login@v1
+      uses: azure/login@v2
       with:
         client-id: ${{ secrets.__clientidsecretname__ }}
         tenant-id: ${{ secrets.__tenantidsecretname__ }}
