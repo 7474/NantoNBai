@@ -46,7 +46,7 @@ sequenceDiagram
     Function->>CDN: "GURAFU" Image
     CDN->>UA: "GURAFU" Image
     Note over CDN: Azure CDN
-    Note over Function: Azure Functions<br/>.NET6 on Windows
+    Note over Function: Azure Functions<br/>.NET8 on Windows
 ```
 
 このようなグラフの良いところの一つには、オフィスソフトで「雑に」作られたグラフであるところがあります。
