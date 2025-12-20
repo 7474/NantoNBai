@@ -13,9 +13,9 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
     - name: Setup .NET SDK
-      uses: actions/setup-dotnet@v5
+      uses: actions/setup-dotnet@2016bd2012dba4e32de620c46fe006a3ac9f0602 # v5
       with:
         dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
     - name: Restore
@@ -25,7 +25,7 @@ jobs:
     - name: Publish
       run: dotnet publish "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --arch x64 --no-build --output "${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}"
     - name: Publish Artifacts
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
       with:
         name: functionapp
         path: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
@@ -36,18 +36,18 @@ jobs:
       id-token: write #This is required for requesting the JWT
     steps:
     - name: Login to Azure
-      uses: azure/login@v2
+      uses: azure/login@1384c340ab2dda50fed2bee3041d1d87018aa5e8 # v2
       with:
         client-id: ${{ secrets.__clientidsecretname__ }}
         tenant-id: ${{ secrets.__tenantidsecretname__ }}
         subscription-id: ${{ secrets.__subscriptionidsecretname__ }}
     - name: Download artifact from build job
-      uses: actions/download-artifact@v7
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
       with:
         name: functionapp
         path: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
     - name: Deploy to Azure Function App
-      uses: Azure/functions-action@v1
+      uses: Azure/functions-action@cfd85ad3044fb548f6ac7869ba2d342a0b2a9c8e # v1
       with:
         app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
         package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
