@@ -68,19 +68,6 @@ OpenXML はデータフォーマットなだけで、これによってpptxフ�
 
 ## Development
 
-Azure Functions の関数アプリは .NET 10 の**分離ワーカーモデル**で動いています。
-[in-process モデルは 2026-11-10 にサポートが終了する](https://azure.github.io/jpazpaas/2024/04/01/azure-functions-inprocess-end-of-support-FVN7-7PZ.html)ためです。
-
-オフィスドキュメントの操作と画像変換が Windows に依存しているため、
-ターゲットフレームワークは `net10.0-windows`、デプロイは x64 のままです。
-
-OpenAPI 拡張が提供する swagger エンドポイントは `HttpRequestData` ベースのままで
-ASP.NET Core 統合 (`ConfigureFunctionsWebApplication`) と併用すると壊れるため、
-関数は `HttpRequestData` / `HttpResponseData` で書いています。
-
-- https://github.com/Azure/azure-functions-dotnet-worker/issues/2071
-- https://github.com/Azure/azure-functions-openapi-extension/issues/617
-
 ### ローカル実行
 
 `local.settings.json` はリポジトリに含めていないので、サンプルからコピーしてください。
