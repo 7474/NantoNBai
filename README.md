@@ -40,8 +40,8 @@ https://n-bai.koudenpa.dev/api/swagger.json
 sequenceDiagram
     UA->>CDN: GET Request
     CDN->>Function: HTTP Trigger
-    Function->>ShapeCrawler: Read pptx template file
-    Function->>ShapeCrawler: Edit pptx data
+    Function->>Open XML SDK: Read pptx template file
+    Function->>Open XML SDK: Edit pptx data
     Function->>Rendering: Render pptx to SVG
     Function->>Svg.Skia: Rasterize SVG to PNG
     Function->>CDN: "GURAFU" Image
@@ -58,9 +58,14 @@ sequenceDiagram
 
 FaaS...[Azure Functions](https://learn.microsoft.com/ja-jp/azure/azure-functions/functions-overview)の関数で生成、その結果を[CDN](https://learn.microsoft.com/en-us/azure/cdn/cdn-overview) ~~...[Front Door](https://learn.microsoft.com/en-us/azure/frontdoor/front-door-overview)~~ でキャッシュが素直な構成でしょう。
 
-当初は低レイヤな OpenXML SDK を用いて生成を試みていましたが、[異様に難解](https://learn.microsoft.com/ja-jp/office/open-xml/working-with-presentations)だったので諦めました。
+当初は低レイヤな OpenXML SDK を用いて生成を試みていましたが、[異様に難解](https://learn.microsoft.com/ja-jp/office/open-xml/working-with-presentations)だったので諦め、
+[ShapeCrawler](https://github.com/ShapeCrawler/ShapeCrawler) を使っていました。
 
-ありがとう [ShapeCrawler](https://github.com/ShapeCrawler/ShapeCrawler)。
+今はテンプレートを編集するだけ (タイトルの文字列と、グラフの系列値・項目名) なので
+[Open XML SDK](https://github.com/dotnet/Open-XML-SDK) で直接触っています。
+ゼロから組み立てるのとは違い、差し替えるだけなら難解ではありませんでした
+([NantoNBaiOpenXml](NantoNBai/NantoNBaiOpenXml.cs))。
+run をそのまま残して `a:t` の中身を入れ替えるので、テンプレートから継承した書式も壊れません。
 
 OpenXML はデータフォーマットなだけで、これによってpptxファイルを生成できても、画像データにはなりません。
 

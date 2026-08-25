@@ -15,7 +15,7 @@ namespace NantoNBai.Tests
     {
         private static SlideDocument Read()
         {
-            var service = new NantoNBaiShapeCrawler();
+            var service = new NantoNBaiOpenXml();
             using var pptx = service.Generate(
                 "./",
                 "ポート番号",

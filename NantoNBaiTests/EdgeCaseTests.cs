@@ -14,7 +14,7 @@ namespace NantoNBai.Tests
     {
         private static SlideDocument Read(string target, double from, double to)
         {
-            var service = new NantoNBaiShapeCrawler();
+            var service = new NantoNBaiOpenXml();
             using var pptx = service.Generate(
                 "./",
                 target,

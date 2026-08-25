@@ -42,7 +42,7 @@ namespace NantoNBaiTests
 
         private static Stream Generate(ConvertFormat format)
         {
-            var service = new NantoNBaiShapeCrawler();
+            var service = new NantoNBaiOpenXml();
             var converter = new Converter();
 
             using var pptx = service.Generate(

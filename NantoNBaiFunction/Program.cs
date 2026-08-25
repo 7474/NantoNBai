@@ -18,7 +18,7 @@ var host = new HostBuilder()
     .ConfigureOpenApi()
     .ConfigureServices(services =>
     {
-        services.AddSingleton<INantoNBaiService, NantoNBaiShapeCrawler>();
+        services.AddSingleton<INantoNBaiService, NantoNBaiOpenXml>();
         services.AddSingleton<Converter>();
         services.AddSingleton<Formatter>();
     })
