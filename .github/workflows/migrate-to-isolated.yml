@@ -1,13 +1,22 @@
 # in-process モデルから分離ワーカーへの切り替えを行う一度きりのワークフロー。
 #
 # FUNCTIONS_WORKER_RUNTIME (ランタイム) とデプロイパッケージ (ペイロード) は
-# 同時に入れ替わらなければならない。本番に直接適用すると、
-# 設定変更→再起動→デプロイ完了までの間ランタイムとペイロードが不整合になり、
-# デプロイに失敗した場合は起動不能のまま戻せなくなる。
+# 同時に入れ替わらなければならない。片方だけを適用するとホストが関数を
+# 一つもロードできず、全エンドポイントが 404 になる。
 #
-# そのためデプロイスロットに新構成を載せ、疎通確認に成功してからスワップする。
-# スワップ対象外に指定していないアプリケーション設定はスロットと一緒に移動するので、
-# ランタイム設定とペイロードが同時に本番へ入れ替わる。
+# target で 2 つの適用方法を選ぶ。
+#
+#   slot        デプロイスロットに新構成を載せ、疎通確認に成功してから
+#               スワップする。無停止だが、スロットの作成・スワップには
+#               Function App だけでなく App Service プランへの権限が要る。
+#               (Microsoft.Web/serverFarms/read, serverFarms/join/action)
+#               組み込みロールなら Website Contributor が該当する。
+#
+#   production  本番へ直接適用する。ダウンタイムを伴い、失敗しても自動では
+#               戻らない。必要な権限は Microsoft.Web/sites/config/write だけで、
+#               通常のデプロイと同じ範囲で済む。
+#               スロットが使えない場合と、ランタイムとペイロードが既に
+#               食い違っていて復旧が必要な場合に使う。
 #
 # 参考: https://azure.github.io/jpazpaas/2024/08/30/migrate-azure-functions-inprocess-to-isolated-using-slot.html
 name: Migrate to isolated worker
@@ -15,17 +24,30 @@ name: Migrate to isolated worker
 on:
   workflow_dispatch:
     inputs:
+      target:
+        description: '適用先'
+        required: true
+        default: slot
+        type: choice
+        options:
+          - slot
+          - production
       resource_group:
         description: 'Function App のリソースグループ名'
         required: true
         type: string
       slot:
-        description: '検証に使うデプロイスロット名'
+        description: '[slot] 検証に使うデプロイスロット名'
         required: true
         default: staging
         type: string
+      create_slot:
+        description: '[slot] スロットが無ければ作成する (App Service プランへの権限が必要)'
+        required: true
+        default: false
+        type: boolean
       swap:
-        description: '疎通確認に成功したらスロットを本番とスワップする'
+        description: '[slot] 疎通確認に成功したらスロットを本番とスワップする'
         required: true
         default: false
         type: boolean
@@ -58,55 +80,48 @@ jobs:
         tenant-id: ${{ secrets.__tenantidsecretname__ }}
         subscription-id: ${{ secrets.__subscriptionidsecretname__ }}
 
-    - name: Ensure deployment slot
+    # --- slot ---------------------------------------------------------------
+    - name: Create deployment slot
+      if: ${{ inputs.target == 'slot' && inputs.create_slot }}
       shell: pwsh
       env:
         APP_NAME: ${{ env.AZURE_FUNCTIONAPP_NAME }}
         RESOURCE_GROUP: ${{ inputs.resource_group }}
         SLOT: ${{ inputs.slot }}
       run: |
-        $ErrorActionPreference = 'Stop'
-        $slots = az functionapp deployment slot list --name $env:APP_NAME --resource-group $env:RESOURCE_GROUP --query '[].name' --output tsv
-        if ($LASTEXITCODE -ne 0) { throw 'デプロイスロットの一覧取得に失敗した' }
-        $existing = @($slots -split "`n" | ForEach-Object { $_.Trim() } | Where-Object { $_ })
-        if ($existing -contains $env:SLOT) {
-          Write-Host "スロット '$($env:SLOT)' は既に存在する"
-        } else {
-          Write-Host "スロット '$($env:SLOT)' を作成する"
-          az functionapp deployment slot create --name $env:APP_NAME --resource-group $env:RESOURCE_GROUP --slot $env:SLOT
-          if ($LASTEXITCODE -ne 0) { throw 'デプロイスロットの作成に失敗した' }
+        $ErrorActionPreference = 'Continue'
+        # 既に存在する場合の Conflict は成功として扱う
+        $output = az functionapp deployment slot create `
+          --name $env:APP_NAME --resource-group $env:RESOURCE_GROUP --slot $env:SLOT 2>&1 | Out-String
+        if ($LASTEXITCODE -ne 0) {
+          Write-Host $output
+          if ($output -match 'Conflict' -or $output -match 'already exists') {
+            Write-Host "スロット '$($env:SLOT)' は既に存在するとみなして続行する"
+          } elseif ($output -match 'AuthorizationFailed') {
+            throw @"
+        スロットの作成に必要な権限がありません。
+        サービスプリンシパルに App Service プランへの権限
+        (Microsoft.Web/serverFarms/read, Microsoft.Web/serverFarms/join/action) が必要です。
+        組み込みロールなら Website Contributor をリソースグループに割り当ててください。
+        権限を広げたくない場合は、スロットを手動で作成してから create_slot=false で再実行するか、
+        target=production を使ってください。
+        "@
+          } else {
+            throw 'デプロイスロットの作成に失敗した'
+          }
         }
 
     - name: Configure slot for the isolated worker
+      if: ${{ inputs.target == 'slot' }}
       shell: pwsh
       env:
         APP_NAME: ${{ env.AZURE_FUNCTIONAPP_NAME }}
         RESOURCE_GROUP: ${{ inputs.resource_group }}
         SLOT: ${{ inputs.slot }}
-      run: |
-        $ErrorActionPreference = 'Stop'
-        az functionapp config appsettings set `
-          --name $env:APP_NAME --resource-group $env:RESOURCE_GROUP --slot $env:SLOT `
-          --settings FUNCTIONS_WORKER_RUNTIME=dotnet-isolated --output none
-        if ($LASTEXITCODE -ne 0) { throw 'FUNCTIONS_WORKER_RUNTIME の設定に失敗した' }
-
-        # .NET 8 の in-process モデルを有効化する設定。分離ワーカーでは不要で、
-        # 残したままにすると挙動が未定義になるため削除する。
-        $names = az functionapp config appsettings list `
-          --name $env:APP_NAME --resource-group $env:RESOURCE_GROUP --slot $env:SLOT `
-          --query '[].name' --output tsv
-        if ($LASTEXITCODE -ne 0) { throw 'アプリケーション設定の一覧取得に失敗した' }
-        if (@($names -split "`n" | ForEach-Object { $_.Trim() }) -contains 'FUNCTIONS_INPROC_NET8_ENABLED') {
-          az functionapp config appsettings delete `
-            --name $env:APP_NAME --resource-group $env:RESOURCE_GROUP --slot $env:SLOT `
-            --setting-names FUNCTIONS_INPROC_NET8_ENABLED --output none
-          if ($LASTEXITCODE -ne 0) { throw 'FUNCTIONS_INPROC_NET8_ENABLED の削除に失敗した' }
-          Write-Host 'FUNCTIONS_INPROC_NET8_ENABLED を削除した'
-        } else {
-          Write-Host 'FUNCTIONS_INPROC_NET8_ENABLED は設定されていない'
-        }
+      run: ./scripts/Set-IsolatedWorkerSettings.ps1 -AppName $env:APP_NAME -ResourceGroup $env:RESOURCE_GROUP -Slot $env:SLOT
 
     - name: Deploy to slot
+      if: ${{ inputs.target == 'slot' }}
       uses: Azure/functions-action@0bd707f87c0b6385742bab336c74e1afc61f6369 # v1
       with:
         app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
@@ -114,6 +129,7 @@ jobs:
         package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
 
     - name: Smoke test slot
+      if: ${{ inputs.target == 'slot' }}
       shell: pwsh
       env:
         APP_NAME: ${{ env.AZURE_FUNCTIONAPP_NAME }}
@@ -129,7 +145,7 @@ jobs:
         pwsh -File ./scripts/Invoke-SmokeTest.ps1 -BaseUrl "https://$($slotHost.Trim())"
 
     - name: Swap slot into production
-      if: ${{ inputs.swap }}
+      if: ${{ inputs.target == 'slot' && inputs.swap }}
       shell: pwsh
       env:
         APP_NAME: ${{ env.AZURE_FUNCTIONAPP_NAME }}
@@ -142,8 +158,28 @@ jobs:
           --slot $env:SLOT --target-slot production --output none
         if ($LASTEXITCODE -ne 0) { throw 'スロットのスワップに失敗した' }
 
+    # --- production ---------------------------------------------------------
+    # 設定を先に入れ替えてからデプロイする。
+    # 分離ワーカーのペイロードが既に載っている状態 (ランタイム設定だけが
+    # 古い状態) からの復旧では、設定の反映だけで即座に復旧する。
+    - name: Configure production for the isolated worker
+      if: ${{ inputs.target == 'production' }}
+      shell: pwsh
+      env:
+        APP_NAME: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+        RESOURCE_GROUP: ${{ inputs.resource_group }}
+      run: ./scripts/Set-IsolatedWorkerSettings.ps1 -AppName $env:APP_NAME -ResourceGroup $env:RESOURCE_GROUP
+
+    - name: Deploy to production
+      if: ${{ inputs.target == 'production' }}
+      uses: Azure/functions-action@0bd707f87c0b6385742bab336c74e1afc61f6369 # v1
+      with:
+        app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+        package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+
+    # --- 共通 ---------------------------------------------------------------
     - name: Smoke test production
-      if: ${{ inputs.swap }}
+      if: ${{ inputs.target == 'production' || (inputs.target == 'slot' && inputs.swap) }}
       shell: pwsh
       env:
         APP_NAME: ${{ env.AZURE_FUNCTIONAPP_NAME }}

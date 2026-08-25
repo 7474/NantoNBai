@@ -106,6 +106,16 @@ master への push で [CD](.github/workflows/cd.yml) が発行とデプロイ�
 デプロイ後に上記の疎通確認を実行します。
 
 in-process から分離ワーカーへの切り替えのように、
-ランタイム設定とペイロードを同時に入れ替える必要がある変更は、
+ランタイム設定 (`FUNCTIONS_WORKER_RUNTIME`) とペイロードを同時に入れ替える必要がある変更は、
 [Migrate to isolated worker](.github/workflows/migrate-to-isolated.yml) を手動実行してください。
-デプロイスロットで疎通確認してから本番とスワップするため、不整合な状態を本番に晒しません。
+片方だけを適用するとホストが関数を一つもロードできず、全エンドポイントが 404 になります。
+
+`target` で 2 つの適用方法を選べます。
+
+| target | 動作 | 必要な権限 |
+| --- | --- | --- |
+| `slot` | スロットに載せて疎通確認してからスワップする。無停止。 | Function App に加えて App Service プランへの権限 (`Microsoft.Web/serverFarms/read`, `serverFarms/join/action`)。組み込みロールなら **Website Contributor** |
+| `production` | 本番へ直接適用する。ダウンタイムを伴い、失敗しても自動では戻らない。 | `Microsoft.Web/sites/config/write` のみ。通常のデプロイと同じ範囲 |
+
+スロットを使う権限が無い場合や、ランタイム設定とペイロードが既に食い違っていて
+復旧が必要な場合は `production` を使ってください。
