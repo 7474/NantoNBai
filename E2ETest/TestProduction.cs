@@ -1,5 +1,6 @@
 ﻿using Codeuctivity.ImageSharpCompare;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using SixLabors.ImageSharp;
 
 namespace E2ETest
@@ -7,11 +8,13 @@ namespace E2ETest
     [TestClass]
     public class TestProduction : PageTest
     {
+        private const string BaseUrl = "https://nantonbaifunctionw.azurewebsites.net";
+
         [TestMethod]
         public async Task GenerateOnFunctionApp()
         {
             // https://n-bai.koudenpa.dev/api/Viewer?name=ポート番号&from=80&to=443
-            var res = await Page.GotoAsync("https://nantonbaifunctionw.azurewebsites.net/api/Generate.png?name=ポート番号&from=80&to=443");
+            var res = await Page.GotoAsync($"{BaseUrl}/api/Generate.png?name=ポート番号&from=80&to=443");
 
             Console.WriteLine(JsonConvert.SerializeObject(res, new JsonSerializerSettings
             {
@@ -28,6 +31,27 @@ namespace E2ETest
             var calcDiff = ImageSharpCompare.CalcDiff(actualImage, expectedImage);
 
             Assert.AreEqual(0, calcDiff.PixelErrorCount);
+        }
+
+        /// <summary>
+        /// OpenAPI ドキュメントは README と Index から公開リンクとして案内している。
+        /// 分離ワーカー移行で最も壊れやすい箇所なので E2E でも監視する。
+        /// </summary>
+        [TestMethod]
+        public async Task SwaggerDocumentOnFunctionApp()
+        {
+            var res = await Page.GotoAsync($"{BaseUrl}/api/swagger.json");
+
+            Assert.IsNotNull(res);
+            Assert.AreEqual(200, res.Status);
+
+            var document = JObject.Parse(await res.TextAsync());
+            var paths = document["paths"] as JObject;
+
+            Assert.IsNotNull(paths, "swagger.json に paths がない");
+            var pathNames = paths.Properties().Select(x => x.Name).ToList();
+            CollectionAssert.Contains(pathNames, "/Generate.{format}");
+            CollectionAssert.Contains(pathNames, "/Viewer");
         }
     }
 }
