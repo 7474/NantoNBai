@@ -224,20 +224,20 @@ namespace NantoNBaiFunction
             }
         }
 
-        public sealed class NanExample : OpenApiExample<string>
+        public sealed class NanExample : OpenApiExample<Nan>
         {
-            public override IOpenApiExample<string> Build(NamingStrategy namingStrategy = null)
+            public override IOpenApiExample<Nan> Build(NamingStrategy namingStrategy = null)
             {
-                Examples.Add(OpenApiExampleResolver.Resolve("default", "bai", namingStrategy));
+                Examples.Add(OpenApiExampleResolver.Resolve("default", Nan.Bai, namingStrategy));
                 return this;
             }
         }
 
-        public sealed class FormatExample : OpenApiExample<string>
+        public sealed class FormatExample : OpenApiExample<ConvertFormat>
         {
-            public override IOpenApiExample<string> Build(NamingStrategy namingStrategy = null)
+            public override IOpenApiExample<ConvertFormat> Build(NamingStrategy namingStrategy = null)
             {
-                Examples.Add(OpenApiExampleResolver.Resolve("default", "png", namingStrategy));
+                Examples.Add(OpenApiExampleResolver.Resolve("default", ConvertFormat.Png, namingStrategy));
                 return this;
             }
         }
