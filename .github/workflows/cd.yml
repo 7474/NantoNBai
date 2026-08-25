@@ -9,7 +9,7 @@ env:
   # 同一にすると *.cs や obj/ ごとデプロイパッケージに含まれてしまう。
   AZURE_FUNCTIONAPP_PACKAGE_PATH: functionapp
   CONFIGURATION: Release
-  DOTNET_CORE_VERSION: 8.0.x
+  DOTNET_CORE_VERSION: 10.0.x
   WORKING_DIRECTORY: NantoNBaiFunction
 jobs:
   build:
