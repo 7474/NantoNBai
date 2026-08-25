@@ -27,7 +27,7 @@ namespace NantoNBai
                 case ConvertFormat.Png:
                     {
                         using var image = slide.SaveAsImage();
-                        image.Save(ms, ImageFormat.Png);
+                        image.CopyTo(ms);
                     }
                     break;
                 default:

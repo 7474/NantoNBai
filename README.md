@@ -46,7 +46,7 @@ sequenceDiagram
     Function->>CDN: "GURAFU" Image
     CDN->>UA: "GURAFU" Image
     Note over CDN: Azure CDN
-    Note over Function: Azure Functions<br/>.NET8 分離ワーカー on Windows
+    Note over Function: Azure Functions<br/>.NET10 分離ワーカー on Windows
 ```
 
 このようなグラフの良いところの一つには、オフィスソフトで「雑に」作られたグラフであるところがあります。
@@ -68,11 +68,11 @@ OpenXML はデータフォーマットなだけで、これによってpptxフ�
 
 ## Development
 
-Azure Functions の関数アプリは .NET 8 の**分離ワーカーモデル**で動いています。
+Azure Functions の関数アプリは .NET 10 の**分離ワーカーモデル**で動いています。
 [in-process モデルは 2026-11-10 にサポートが終了する](https://azure.github.io/jpazpaas/2024/04/01/azure-functions-inprocess-end-of-support-FVN7-7PZ.html)ためです。
 
 オフィスドキュメントの操作と画像変換が Windows に依存しているため、
-ターゲットフレームワークは `net8.0-windows`、デプロイは x64 のままです。
+ターゲットフレームワークは `net10.0-windows`、デプロイは x64 のままです。
 
 OpenAPI 拡張が提供する swagger エンドポイントは `HttpRequestData` ベースのままで
 ASP.NET Core 統合 (`ConfigureFunctionsWebApplication`) と併用すると壊れるため、
