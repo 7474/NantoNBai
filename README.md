@@ -104,10 +104,3 @@ pwsh -File scripts/Invoke-SmokeTest.ps1 -BaseUrl http://localhost:7071
 
 master への push で [CD](.github/workflows/cd.yml) が発行とデプロイを行い、
 デプロイ後に上記の疎通確認を実行します。
-
-分離ワーカーではホスト側の WebJobs 拡張が隠しディレクトリ `.azurefunctions` に発行されます。
-`actions/upload-artifact` は既定で隠しファイルを除外するため、
-[公式テンプレート](https://learn.microsoft.com/ja-jp/azure/azure-functions/functions-how-to-github-actions)
-同様に `include-hidden-files: true` が必要です。
-これが欠けるとホストは拡張を読み込めず、関数を 1 つも登録しないまま起動し、
-デプロイが成功しているのに `/api/*` の全呼び出しが 404 になります。
