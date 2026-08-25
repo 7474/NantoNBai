@@ -53,5 +53,23 @@ namespace E2ETest
             CollectionAssert.Contains(pathNames, "/Generate.{format}");
             CollectionAssert.Contains(pathNames, "/Viewer");
         }
+
+        [TestMethod]
+        public async Task InvalidQueryReturnsBadRequest()
+        {
+            var res = await Page.GotoAsync($"{BaseUrl}/api/Viewer?name=test&from=invalid&to=443");
+
+            Assert.IsNotNull(res);
+            Assert.AreEqual(400, res.Status);
+        }
+
+        [TestMethod]
+        public async Task InvalidEnumReturnsBadRequest()
+        {
+            var res = await Page.GotoAsync($"{BaseUrl}/api/Generate.invalid?name=test&from=80&to=443");
+
+            Assert.IsNotNull(res);
+            Assert.AreEqual(400, res.Status);
+        }
     }
 }
