@@ -5,7 +5,9 @@ on:
     - master
 env:
   AZURE_FUNCTIONAPP_NAME: NantoNBaiFunctionW
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: NantoNBaiFunction
+  # 発行先はソースディレクトリと分ける。
+  # 同一にすると *.cs や obj/ ごとデプロイパッケージに含まれてしまう。
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: functionapp
   CONFIGURATION: Release
   DOTNET_CORE_VERSION: 8.0.x
   WORKING_DIRECTORY: NantoNBaiFunction
@@ -24,6 +26,24 @@ jobs:
       run: dotnet build "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --arch x64 --no-restore
     - name: Publish
       run: dotnet publish "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --arch x64 --no-build --output "${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}"
+    - name: Verify publish output
+      shell: pwsh
+      env:
+        PUBLISH_DIR: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+      run: |
+        $required = @(
+          'host.json',
+          'worker.config.json',
+          'functions.metadata',
+          'NantoNBaiFunction.dll',
+          'nanto-n-bai-template.pptx',
+          'nanto-n-bai-template(1).pptx'
+        )
+        $missing = @($required | Where-Object { -not (Test-Path (Join-Path $env:PUBLISH_DIR $_)) })
+        if ($missing.Count -gt 0) {
+          throw "発行成果物に不足がある: $($missing -join ', ')"
+        }
+        Write-Host '発行成果物の確認 OK'
     - name: Publish Artifacts
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       with:
@@ -35,6 +55,7 @@ jobs:
     permissions:
       id-token: write #This is required for requesting the JWT
     steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
     - name: Login to Azure
       uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2
       with:
@@ -51,4 +72,10 @@ jobs:
       with:
         app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
         package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-
+    # E2E は CD の完了後に別ワークフローで走るため、
+    # ここで最低限の疎通を確認して壊れたデプロイを早く赤くする。
+    - name: Smoke test deployed app
+      shell: pwsh
+      env:
+        APP_NAME: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+      run: pwsh -File ./scripts/Invoke-SmokeTest.ps1 -BaseUrl "https://$($env:APP_NAME.ToLowerInvariant()).azurewebsites.net"
