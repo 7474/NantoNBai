@@ -104,8 +104,3 @@ pwsh -File scripts/Invoke-SmokeTest.ps1 -BaseUrl http://localhost:7071
 
 master への push で [CD](.github/workflows/cd.yml) が発行とデプロイを行い、
 デプロイ後に上記の疎通確認を実行します。
-
-in-process から分離ワーカーへの切り替えのように、
-ランタイム設定とペイロードを同時に入れ替える必要がある変更は、
-[Migrate to isolated worker](.github/workflows/migrate-to-isolated.yml) を手動実行してください。
-デプロイスロットで疎通確認してから本番とスワップするため、不整合な状態を本番に晒しません。
