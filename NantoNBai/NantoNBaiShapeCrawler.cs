@@ -1,6 +1,9 @@
-﻿using ShapeCrawler;
+﻿using DocumentFormat.OpenXml.Packaging;
+using ShapeCrawler;
 using System.IO;
 using System.Linq;
+using A = DocumentFormat.OpenXml.Drawing;
+using P = DocumentFormat.OpenXml.Presentation;
 
 namespace NantoNBai
 {
@@ -30,9 +33,45 @@ namespace NantoNBai
 
             var ms = new MemoryStream();
             pres.Save(ms);
+
+            ms.Position = 0;
+            RestoreInheritedTitleFormat(ms);
             ms.Position = 0;
 
             return ms;
+        }
+
+        // ShapeCrawler 0.80 はテキストを差し替えるときに、解決した書式を run に明示的に書き込む。
+        // その値がテンプレートの継承元 (マスターの titleStyle は 44pt、テーマの見出しフォント) と
+        // 一致せず、タイトルが 14pt の別フォントで描画されてしまう。
+        // ShapeCrawler の保存処理が書き込むため、保存後に明示書式を削って継承に戻す。
+        private static void RestoreInheritedTitleFormat(Stream pptx)
+        {
+            using var document = PresentationDocument.Open(pptx, true);
+            var slide = document.PresentationPart?.SlideParts.FirstOrDefault()?.Slide;
+            if (slide == null)
+            {
+                return;
+            }
+
+            var title = slide.Descendants<P.Shape>().FirstOrDefault(sp =>
+                sp.NonVisualShapeProperties?.ApplicationNonVisualDrawingProperties?.PlaceholderShape?.Type?.Value
+                    == P.PlaceholderValues.Title);
+            if (title == null)
+            {
+                return;
+            }
+
+            foreach (var properties in title.Descendants<A.RunProperties>().ToList())
+            {
+                properties.FontSize = null;
+                foreach (var child in properties.ChildElements
+                    .Where(c => c is A.LatinFont or A.EastAsianFont or A.ComplexScriptFont or A.SolidFill)
+                    .ToList())
+                {
+                    child.Remove();
+                }
+            }
         }
     }
 }
