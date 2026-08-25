@@ -61,11 +61,11 @@ FaaS...[Azure Functions](https://learn.microsoft.com/ja-jp/azure/azure-functions
 当初は低レイヤな OpenXML SDK を用いて生成を試みていましたが、[異様に難解](https://learn.microsoft.com/ja-jp/office/open-xml/working-with-presentations)だったので諦め、
 [ShapeCrawler](https://github.com/ShapeCrawler/ShapeCrawler) を使っていました。
 
-今はテンプレートを編集するだけ (タイトルの文字列と、グラフの系列値・項目名) なので
-[Open XML SDK](https://github.com/dotnet/Open-XML-SDK) で直接触っています。
-ゼロから組み立てるのとは違い、差し替えるだけなら難解ではありませんでした
+今は [Open XML SDK](https://github.com/dotnet/Open-XML-SDK) で直接触っています
 ([NantoNBaiOpenXml](NantoNBai/NantoNBaiOpenXml.cs))。
-run をそのまま残して `a:t` の中身を入れ替えるので、テンプレートから継承した書式も壊れません。
+難解さが解消したわけではなく、面倒で人間が諦めていたところを生成AIに委譲できるようになった、というのが実態です。
+
+run をそのまま残して `a:t` の中身を入れ替えるので、テンプレートから継承した書式は壊れません。
 
 OpenXML はデータフォーマットなだけで、これによってpptxファイルを生成できても、画像データにはなりません。
 

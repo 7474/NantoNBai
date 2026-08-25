@@ -10,6 +10,16 @@ namespace NantoNBai.Tests
     /// </summary>
     internal static class PixelComparison
     {
+        /// <summary>1 チャンネルあたりの許容差。</summary>
+        /// <remarks>
+        /// グリフのアウトラインは環境に依存しないが、塗りのアンチエイリアスは
+        /// ラスタライザのビルドでごく僅かに変わりうる。境界の 1 段差は許容する。
+        /// </remarks>
+        private const int ChannelTolerance = 24;
+
+        /// <summary>許容する差分ピクセルの割合。透かしや書式の崩れはこれを大きく超える。</summary>
+        private const double PixelTolerance = 0.002d;
+
         public static void AssertSame(string expectedPath, byte[] actual, string actualPath)
         {
             File.WriteAllBytes(actualPath, actual);
@@ -25,6 +35,7 @@ namespace NantoNBai.Tests
                 $"画像の大きさが違う ({actualPath} を確認)");
 
             var differences = 0;
+            var worstChannelDifference = 0;
             var firstX = -1;
             var firstY = -1;
 
@@ -32,7 +43,16 @@ namespace NantoNBai.Tests
             {
                 for (var x = 0; x < expectedBitmap.Width; x++)
                 {
-                    if (expectedBitmap.GetPixel(x, y) == actualBitmap.GetPixel(x, y))
+                    var expectedPixel = expectedBitmap.GetPixel(x, y);
+                    var actualPixel = actualBitmap.GetPixel(x, y);
+
+                    var channelDifference = Math.Max(
+                        Math.Max(
+                            Math.Abs(expectedPixel.Red - actualPixel.Red),
+                            Math.Abs(expectedPixel.Green - actualPixel.Green)),
+                        Math.Abs(expectedPixel.Blue - actualPixel.Blue));
+
+                    if (channelDifference <= ChannelTolerance)
                     {
                         continue;
                     }
@@ -43,13 +63,18 @@ namespace NantoNBai.Tests
                     }
 
                     differences++;
+                    worstChannelDifference = Math.Max(worstChannelDifference, channelDifference);
                 }
             }
 
-            Assert.AreEqual(
-                0,
-                differences,
-                $"描画結果が期待画像と違う。最初の差分は ({firstX}, {firstY})。{actualPath} と {expectedPath} を見比べる");
+            var total = expectedBitmap.Width * expectedBitmap.Height;
+            var ratio = (double)differences / total;
+
+            Assert.IsTrue(
+                ratio <= PixelTolerance,
+                $"描画結果が期待画像と違う。差分 {differences} / {total} ピクセル ({ratio:P3}、"
+                + $"許容 {PixelTolerance:P1})、最大の色差 {worstChannelDifference}。"
+                + $"最初の差分は ({firstX}, {firstY})。{actualPath} と {expectedPath} を見比べる");
         }
     }
 }

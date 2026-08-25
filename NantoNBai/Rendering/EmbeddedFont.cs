@@ -24,7 +24,15 @@ namespace NantoNBai.Rendering
 
         public static SKTypeface Typeface => Lazy.Value;
 
-        public static SKFont CreateFont(float sizePixels) => new(Typeface, sizePixels);
+        public static SKFont CreateFont(float sizePixels) => new(Typeface, sizePixels)
+        {
+            // ヒンティングは実行環境ごとにグリフを格子に合わせ込むため、
+            // 字形と字送りが OS で変わってしまう。切って純粋なアウトラインを使う。
+            Hinting = SKFontHinting.None,
+            Subpixel = false,
+            LinearMetrics = true,
+            Edging = SKFontEdging.Antialias,
+        };
 
         private static SKTypeface Load()
         {
