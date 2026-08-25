@@ -1,7 +1,5 @@
-﻿using Codeuctivity.ImageSharpCompare;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using SixLabors.ImageSharp;
 
 namespace E2ETest
 {
@@ -22,15 +20,8 @@ namespace E2ETest
                 Formatting = Formatting.Indented,
             }));
 
-            //var screenshot = await Page.ScreenshotAsync();
-            using var expectedImage = SixLabors.ImageSharp.Image.Load("expect.png");
-            using var actualImage = SixLabors.ImageSharp.Image.Load(await res.BodyAsync());
-            actualImage.SaveAsPng("actual.png");
-
-            //actualImage.Mutate(x => x.Resize(expectedImage.Width, expectedImage.Height));
-            var calcDiff = ImageSharpCompare.CalcDiff(actualImage, expectedImage);
-
-            Assert.AreEqual(0, calcDiff.PixelErrorCount);
+            // 描画は同梱フォントで行うので、本番の出力もローカルの期待画像と一致する
+            NantoNBai.Tests.PixelComparison.AssertSame("expect.png", await res.BodyAsync(), "actual.png");
         }
 
         /// <summary>

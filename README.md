@@ -42,7 +42,8 @@ sequenceDiagram
     CDN->>Function: HTTP Trigger
     Function->>ShapeCrawler: Read pptx template file
     Function->>ShapeCrawler: Edit pptx data
-    Function->>Spire.Presentation: Convert pptx to image
+    Function->>Rendering: Render pptx to SVG
+    Function->>Svg.Skia: Rasterize SVG to PNG
     Function->>CDN: "GURAFU" Image
     CDN->>UA: "GURAFU" Image
     Note over CDN: Azure CDN
@@ -63,7 +64,23 @@ FaaS...[Azure Functions](https://learn.microsoft.com/ja-jp/azure/azure-functions
 
 OpenXML はデータフォーマットなだけで、これによってpptxファイルを生成できても、画像データにはなりません。
 
-ありがとう [Spire.Presentation（無料版）](https://jp.e-iceblue.com/download/free-spire-presentation-for-net.html)。
+かつては Spire.Presentation（無料版）で変換していましたが、
+無料版が変換した画像に評価版の透かしを入れるようになったため、自前で描くことにしました
+([NantoNBai/Rendering](NantoNBai/Rendering))。
+
+変換は **pptx → SVG → PNG** の 1 本道です。
+テンプレートの図形・テキスト・グラフを読んで SVG を組み立て、
+ラスタライズは [Svg.Skia](https://github.com/wieslawsoltes/Svg.Skia)（MIT）に任せています。
+描画の実装が 1 つなので、SVG と PNG で見た目がずれません。
+
+テンプレートが使っている構造 (プレースホルダーのテキスト・折線矢印・単純な縦棒グラフ) だけを扱い、
+知らない構造に出会ったら例外にしています。黙って違う絵を出さないためです。
+
+文字は同梱した [BIZ UDPGothic](https://github.com/googlefonts/morisawa-biz-ud-gothic)（OFL 1.1、
+[fonts/OFL.txt](NantoNBai/fonts/OFL.txt)）で描き、グリフはアウトラインにして SVG に埋めています。
+実行環境やブラウザのフォントに依存しないので、CI・本番・手元で同じ絵になります。
+
+ありがとう [SkiaSharp](https://github.com/mono/SkiaSharp) と [Svg.Skia](https://github.com/wieslawsoltes/Svg.Skia)。
 
 
 ## Development

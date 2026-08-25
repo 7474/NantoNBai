@@ -1,42 +1,39 @@
-﻿using Newtonsoft.Json.Converters;
-using Spire.Presentation;
-using System.Drawing.Imaging;
+using NantoNBai.Rendering;
+using Newtonsoft.Json.Converters;
 using System.IO;
 using System.Runtime.Serialization;
+using System.Text;
 
 namespace NantoNBai
 {
+    /// <summary>
+    /// pptx を配信できる形式に変換する。
+    /// </summary>
+    /// <remarks>
+    /// 変換は pptx -> SVG -> PNG の 1 本道で、描画の実装は <see cref="SvgSlideWriter"/> だけが持つ。
+    /// PowerPoint の描画エンジンは使わないので、実行環境にオフィスソフトも商用ライブラリも要らない。
+    /// </remarks>
     public class Converter
     {
+        private readonly PptxSlideReader _reader = new();
+        private readonly SvgSlideWriter _writer = new();
+        private readonly SvgRasterizer _rasterizer = new();
+
         public Stream ConvertFromPptx(Stream pptx, ConvertFormat format)
         {
             if (format == ConvertFormat.Pptx) { return pptx; }
 
-            var presentation = new Presentation();
-            presentation.LoadFromStream(pptx, FileFormat.Pptx2013);
-            var slide = presentation.Slides[0];
+            var slide = _reader.Read(pptx);
+            var svg = _writer.Write(slide);
 
-            var ms = new MemoryStream();
-
-            switch (format)
+            if (format == ConvertFormat.Svg)
             {
-                case ConvertFormat.Svg:
-                    var bin = slide.SaveToSVG();
-                    ms.Write(bin);
-                    break;
-                case ConvertFormat.Png:
-                    {
-                        using var image = slide.SaveAsImage();
-                        image.Save(ms, ImageFormat.Png);
-                    }
-                    break;
-                default:
-                    throw new System.Exception("Invalid format");
+                var stream = new MemoryStream(Encoding.UTF8.GetBytes(svg));
+                stream.Position = 0;
+                return stream;
             }
 
-            ms.Position = 0;
-
-            return ms;
+            return _rasterizer.ToPng(svg, (int)slide.Width, (int)slide.Height);
         }
     }
 
