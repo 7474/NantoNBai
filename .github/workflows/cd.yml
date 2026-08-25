@@ -46,9 +46,13 @@ jobs:
       with:
         name: functionapp
         path: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+    - name: Configure isolated worker
+      shell: pwsh
+      run: |
+        $resourceGroup = az functionapp list --query "[?name=='${{ env.AZURE_FUNCTIONAPP_NAME }}'].resourceGroup | [0]" --output tsv
+        az functionapp config appsettings set --name "${{ env.AZURE_FUNCTIONAPP_NAME }}" --resource-group $resourceGroup --settings FUNCTIONS_WORKER_RUNTIME=dotnet-isolated
     - name: Deploy to Azure Function App
       uses: Azure/functions-action@0bd707f87c0b6385742bab336c74e1afc61f6369 # v1
       with:
         app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
         package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-

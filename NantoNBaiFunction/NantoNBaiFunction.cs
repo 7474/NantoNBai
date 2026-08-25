@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
@@ -28,7 +27,7 @@ namespace NantoNBaiFunction
             _converter = new Converter();
         }
 
-        [FunctionName(nameof(Generate))]
+        [Function(nameof(Generate))]
         [OpenApiOperation("Generate", "Gurafu")]
         [OpenApiParameter(name: "name", In = ParameterLocation.Query, Required = true, Type = typeof(string), Description = "The **Name** parameter")]
         [OpenApiParameter(name: "from", In = ParameterLocation.Query, Required = true, Type = typeof(double), Description = "The **From** parameter")]
@@ -38,8 +37,7 @@ namespace NantoNBaiFunction
         [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/octet-stream", bodyType: typeof(byte[]))]
         public async Task<IActionResult> Generate(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Generate.{format}")] HttpRequest req,
-            string format,
-            ExecutionContext executionContext
+            string format
         )
         {
             _logger.LogInformation($"C# HTTP trigger function processed a request. path: {req.Path}, query: {req.QueryString}");
@@ -51,7 +49,7 @@ namespace NantoNBaiFunction
             var nan = (Nan)System.Enum.Parse(typeof(Nan), req.Query["nan"].FirstOrDefault() ?? "bai", true);
 
             var ms = _nantoNBaiService.Generate(
-                executionContext.FunctionAppDirectory,
+                AppContext.BaseDirectory,
                 name,
                 from, 
                 to, 
@@ -77,7 +75,7 @@ namespace NantoNBaiFunction
             };
         }
 
-        [FunctionName(nameof(Viewer))]
+        [Function(nameof(Viewer))]
         [OpenApiOperation("Viewer", "Gurafu")]
         [OpenApiParameter(name: "name", In = ParameterLocation.Query, Required = true, Type = typeof(string), Description = "The **Name** parameter")]
         [OpenApiParameter(name: "from", In = ParameterLocation.Query, Required = true, Type = typeof(double), Description = "The **From** parameter")]
@@ -111,7 +109,7 @@ namespace NantoNBaiFunction
                 $"</body></html>"), "text/html");
         }
 
-        [FunctionName(nameof(Index))]
+        [Function(nameof(Index))]
         public async Task<IActionResult> Index(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Index")] HttpRequest req
         )
@@ -138,4 +136,3 @@ namespace NantoNBaiFunction
         }
     }
 }
-
