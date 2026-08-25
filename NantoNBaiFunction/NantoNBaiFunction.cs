@@ -1,9 +1,12 @@
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Abstractions;
 using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
+using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Resolvers;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using NantoNBai;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.IO;
 using System.Linq;
@@ -44,11 +47,11 @@ namespace NantoNBaiFunction
 
         [Function(nameof(Generate))]
         [OpenApiOperation("Generate", "Gurafu")]
-        [OpenApiParameter(name: "name", In = ParameterLocation.Query, Required = true, Type = typeof(string), Description = "The **Name** parameter")]
-        [OpenApiParameter(name: "from", In = ParameterLocation.Query, Required = true, Type = typeof(double), Description = "The **From** parameter")]
-        [OpenApiParameter(name: "to", In = ParameterLocation.Query, Required = true, Type = typeof(double), Description = "The **To** parameter")]
-        [OpenApiParameter(name: "nan", In = ParameterLocation.Query, Required = false, Type = typeof(Nan), Description = "The **Nan** parameter")]
-        [OpenApiParameter(name: "format", In = ParameterLocation.Path, Required = true, Type = typeof(ConvertFormat), Description = "The **Format** parameter")]
+        [OpenApiParameter(name: "name", In = ParameterLocation.Query, Required = true, Type = typeof(string), Example = typeof(NameExample), Description = "The **Name** parameter")]
+        [OpenApiParameter(name: "from", In = ParameterLocation.Query, Required = true, Type = typeof(double), Example = typeof(FromExample), Description = "The **From** parameter")]
+        [OpenApiParameter(name: "to", In = ParameterLocation.Query, Required = true, Type = typeof(double), Example = typeof(ToExample), Description = "The **To** parameter")]
+        [OpenApiParameter(name: "nan", In = ParameterLocation.Query, Required = false, Type = typeof(Nan), Example = typeof(NanExample), Description = "The **Nan** parameter")]
+        [OpenApiParameter(name: "format", In = ParameterLocation.Path, Required = true, Type = typeof(ConvertFormat), Example = typeof(FormatExample), Description = "The **Format** parameter")]
         [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/octet-stream", bodyType: typeof(byte[]))]
         public async Task<HttpResponseData> Generate(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Generate.{format}")] HttpRequestData req,
@@ -97,10 +100,10 @@ namespace NantoNBaiFunction
 
         [Function(nameof(Viewer))]
         [OpenApiOperation("Viewer", "Gurafu")]
-        [OpenApiParameter(name: "name", In = ParameterLocation.Query, Required = true, Type = typeof(string), Description = "The **Name** parameter")]
-        [OpenApiParameter(name: "from", In = ParameterLocation.Query, Required = true, Type = typeof(double), Description = "The **From** parameter")]
-        [OpenApiParameter(name: "to", In = ParameterLocation.Query, Required = true, Type = typeof(double), Description = "The **To** parameter")]
-        [OpenApiParameter(name: "nan", In = ParameterLocation.Query, Required = false, Type = typeof(Nan), Description = "The **Nan** parameter")]
+        [OpenApiParameter(name: "name", In = ParameterLocation.Query, Required = true, Type = typeof(string), Example = typeof(NameExample), Description = "The **Name** parameter")]
+        [OpenApiParameter(name: "from", In = ParameterLocation.Query, Required = true, Type = typeof(double), Example = typeof(FromExample), Description = "The **From** parameter")]
+        [OpenApiParameter(name: "to", In = ParameterLocation.Query, Required = true, Type = typeof(double), Example = typeof(ToExample), Description = "The **To** parameter")]
+        [OpenApiParameter(name: "nan", In = ParameterLocation.Query, Required = false, Type = typeof(Nan), Example = typeof(NanExample), Description = "The **Nan** parameter")]
         [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "text/html", bodyType: typeof(string))]
         public async Task<HttpResponseData> Viewer(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Viewer")] HttpRequestData req
@@ -192,6 +195,51 @@ namespace NantoNBaiFunction
         {
             var ascii = new string(fileName.Select(c => c < 0x20 || c > 0x7e || c == '"' || c == '\\' ? '_' : c).ToArray());
             return $"attachment; filename=\"{ascii}\"; filename*=UTF-8''{Uri.EscapeDataString(fileName)}";
+        }
+
+        public sealed class NameExample : OpenApiExample<string>
+        {
+            public override IOpenApiExample<string> Build(NamingStrategy namingStrategy = null)
+            {
+                Examples.Add(OpenApiExampleResolver.Resolve("default", "ポート番号", namingStrategy));
+                return this;
+            }
+        }
+
+        public sealed class FromExample : OpenApiExample<double>
+        {
+            public override IOpenApiExample<double> Build(NamingStrategy namingStrategy = null)
+            {
+                Examples.Add(OpenApiExampleResolver.Resolve("default", 80d, namingStrategy));
+                return this;
+            }
+        }
+
+        public sealed class ToExample : OpenApiExample<double>
+        {
+            public override IOpenApiExample<double> Build(NamingStrategy namingStrategy = null)
+            {
+                Examples.Add(OpenApiExampleResolver.Resolve("default", 443d, namingStrategy));
+                return this;
+            }
+        }
+
+        public sealed class NanExample : OpenApiExample<string>
+        {
+            public override IOpenApiExample<string> Build(NamingStrategy namingStrategy = null)
+            {
+                Examples.Add(OpenApiExampleResolver.Resolve("default", "bai", namingStrategy));
+                return this;
+            }
+        }
+
+        public sealed class FormatExample : OpenApiExample<string>
+        {
+            public override IOpenApiExample<string> Build(NamingStrategy namingStrategy = null)
+            {
+                Examples.Add(OpenApiExampleResolver.Resolve("default", "png", namingStrategy));
+                return this;
+            }
         }
     }
 }
