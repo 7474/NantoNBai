@@ -72,6 +72,21 @@ jobs:
       with:
         app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
         package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+    # 分離ワーカーは x64 バイナリとして発行しているため 64 ビットプラットフォームが必要。
+    # Consumption プランは既定で 32 ビットのため、明示的に 64 ビットに設定する。
+    # WEBSITE_USE_PLACEHOLDER_DOTNETISOLATED=1 は .NET 8 分離ワーカーの
+    # プレースホルダーウォームアップを有効にし、コールドスタートを安定させる。
+    - name: Configure function app platform
+      shell: bash
+      run: |
+        az functionapp config set \
+          --name ${{ env.AZURE_FUNCTIONAPP_NAME }} \
+          --resource-group nanto-n-bai-w \
+          --use-32bit-worker-process false
+        az functionapp config appsettings set \
+          --name ${{ env.AZURE_FUNCTIONAPP_NAME }} \
+          --resource-group nanto-n-bai-w \
+          --settings WEBSITE_USE_PLACEHOLDER_DOTNETISOLATED=1
     # E2E は CD の完了後に別ワークフローで走るため、
     # ここで最低限の疎通を確認して壊れたデプロイを早く赤くする。
     - name: Smoke test deployed app
