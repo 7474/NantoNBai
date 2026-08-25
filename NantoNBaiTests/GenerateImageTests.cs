@@ -1,45 +1,59 @@
-﻿using Codeuctivity.ImageSharpCompare;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NantoNBai;
-using SixLabors.ImageSharp;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace NantoNBaiTests
 {
+    /// <summary>
+    /// テンプレートを編集して描画するところまでを通しで確認する。
+    /// 同梱フォントで描くので、この比較は実行環境に依存しない。
+    /// </summary>
     [TestClass()]
     public class GenerateImageTests
     {
         [TestMethod()]
         public async Task GenerateImageTest()
         {
-            var _nantoNBaiService = new NantoNBaiShapeCrawler();
-            var _converter = new Converter();
+            using var actual = Generate(ConvertFormat.Png);
+            using var buffer = new MemoryStream();
+            await actual.CopyToAsync(buffer);
 
-            string name = "ポート番号";
-            var from = 80d;
-            var to = 443d;
-            var convertFormat = ConvertFormat.Png;
-            var nan = Nan.Bai;
+            NantoNBai.Tests.PixelComparison.AssertSame("expect.png", buffer.ToArray(), "actual.png");
+        }
 
-            using var ms = _nantoNBaiService.Generate(
+        /// <summary>
+        /// SVG は PNG と同じ描画から出しているので、こちらも通ることを確かめる。
+        /// 評価版の透かしのような余計な描画が混ざっていないことも見る。
+        /// </summary>
+        [TestMethod()]
+        public async Task GenerateSvgTest()
+        {
+            using var stream = Generate(ConvertFormat.Svg);
+            using var reader = new StreamReader(stream);
+            var svg = await reader.ReadToEndAsync();
+
+            StringAssert.StartsWith(svg, "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1280\" height=\"720\"");
+            StringAssert.Contains(svg, "#4472C4", "from の棒がない");
+            StringAssert.Contains(svg, "#ED7D31", "to の棒がない");
+            StringAssert.Contains(svg, "#FF0000", "矢印がない");
+            Assert.IsFalse(svg.Contains("Evaluation"), "評価版の透かしのような描画が混ざっている");
+        }
+
+        private static Stream Generate(ConvertFormat format)
+        {
+            var service = new NantoNBaiOpenXml();
+            var converter = new Converter();
+
+            using var pptx = service.Generate(
                 "./",
-                name,
-                from,
-                to,
-                nan,
+                "ポート番号",
+                80d,
+                443d,
+                Nan.Bai,
                 "application/vnd.openxmlformats-officedocument.presentationml.presentation");
-            using var imageFileStream = _converter.ConvertFromPptx(ms, convertFormat);
-            using var ms2 = new MemoryStream();
-            await imageFileStream.CopyToAsync(ms2);
-            ms2.Position = 0;
 
-            using var expectedImage = SixLabors.ImageSharp.Image.Load("expect.png");
-            using var actualImage = SixLabors.ImageSharp.Image.Load(ms2);
-            actualImage.SaveAsPng("actual.png");
-
-            //actualImage.Mutate(x => x.Resize(expectedImage.Width, expectedImage.Height));
-            var calcDiff = ImageSharpCompare.CalcDiff(actualImage, expectedImage);
-
-            Assert.AreEqual(0, calcDiff.PixelErrorCount);
+            return converter.ConvertFromPptx(pptx, format);
         }
     }
 }

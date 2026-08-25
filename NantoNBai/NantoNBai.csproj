@@ -1,25 +1,22 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- 画像変換が System.Drawing (Windows 専用) を使うため Windows 向けにする -->
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
+    <!-- 既存コードの警告を増やさずに、新しい描画コードで ? 表記を使うため -->
+    <Nullable>annotations</Nullable>
     <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- 上げられない。
-         11.4.0 は Free 版の評価透かし (Evaluation Warning) を変換した画像に焼き込む。
-         9.3.0 は透かしを入れないが SkiaSharp 1.68 を要求し、
-         ShapeCrawler が要求する SkiaSharp 4.x と実行時に衝突する
-         (MissingMethodException: SkiaSharp.SKPathVerb Iterator.Next)。
-         7.8.0 は System.Drawing で描画するため SkiaSharp に依存しない。 -->
-    <PackageReference Include="FreeSpire.Presentation" Version="7.8.0" />
     <PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="ShapeCrawler" Version="0.80.0" />
-    <!-- FreeSpire.Presentation 7.8.0 が引く 6.0.0 に脆弱性の指摘があるため明示的に上げる -->
-    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.11" />
-    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.11" />
+    <PackageReference Include="SkiaSharp" Version="4.150.1" />
+    <PackageReference Include="Svg.Skia" Version="5.2.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 描画に使うフォントは実行環境に頼らず埋め込む (OFL 1.1 / fonts/OFL.txt) -->
+    <EmbeddedResource Include="fonts\BIZUDPGothic-Regular.ttf" />
   </ItemGroup>
 
   <ItemGroup>

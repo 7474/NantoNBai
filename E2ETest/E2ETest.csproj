@@ -11,14 +11,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Codeuctivity.ImageSharpCompare" Version="4.1.390" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
     <PackageReference Include="MSTest.TestAdapter" Version="4.3.3" />
     <PackageReference Include="MSTest.TestFramework" Version="4.3.3" />
     <PackageReference Include="Microsoft.Playwright.MSTest" Version="1.62.0" />
     <PackageReference Include="coverlet.collector" Version="10.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="4.1.1" />
+    <PackageReference Include="SkiaSharp" Version="4.150.1" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="4.150.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 画像比較はユニットテストと同じ実装を使う -->
+    <Compile Include="..\NantoNBaiTests\PixelComparison.cs" Link="PixelComparison.cs" />
   </ItemGroup>
 
   <ItemGroup>
