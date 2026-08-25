@@ -1,7 +1,5 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
@@ -12,23 +10,39 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace NantoNBaiFunction
 {
     public class NantoNBaiFunction
     {
+        private const string CacheControl = "public, max-age=31536000";
+
+        // in-process では ExecutionContext.FunctionAppDirectory (host.json のあるディレクトリ) を渡していた。
+        // 分離ワーカーではワーカーアセンブリが発行ルートに直接置かれるため、
+        // AppContext.BaseDirectory が同じディレクトリを指す。
+        // テンプレート pptx は NantoNBai.csproj が CopyToOutputDirectory=Always で
+        // このディレクトリに配置している。
+        private static readonly string TemplateDirectory = AppContext.BaseDirectory;
+
         private readonly ILogger<NantoNBaiFunction> _logger;
         private readonly INantoNBaiService _nantoNBaiService;
         private readonly Converter _converter;
+        private readonly Formatter _formatter;
 
-        public NantoNBaiFunction(ILogger<NantoNBaiFunction> log)
+        public NantoNBaiFunction(
+            ILogger<NantoNBaiFunction> log,
+            INantoNBaiService nantoNBaiService,
+            Converter converter,
+            Formatter formatter)
         {
             _logger = log;
-            _nantoNBaiService = new NantoNBaiShapeCrawler();
-            _converter = new Converter();
+            _nantoNBaiService = nantoNBaiService;
+            _converter = converter;
+            _formatter = formatter;
         }
 
-        [FunctionName(nameof(Generate))]
+        [Function(nameof(Generate))]
         [OpenApiOperation("Generate", "Gurafu")]
         [OpenApiParameter(name: "name", In = ParameterLocation.Query, Required = true, Type = typeof(string), Description = "The **Name** parameter")]
         [OpenApiParameter(name: "from", In = ParameterLocation.Query, Required = true, Type = typeof(double), Description = "The **From** parameter")]
@@ -36,90 +50,98 @@ namespace NantoNBaiFunction
         [OpenApiParameter(name: "nan", In = ParameterLocation.Query, Required = false, Type = typeof(Nan), Description = "The **Nan** parameter")]
         [OpenApiParameter(name: "format", In = ParameterLocation.Path, Required = true, Type = typeof(ConvertFormat), Description = "The **Format** parameter")]
         [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/octet-stream", bodyType: typeof(byte[]))]
-        public async Task<IActionResult> Generate(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Generate.{format}")] HttpRequest req,
-            string format,
-            ExecutionContext executionContext
+        public async Task<HttpResponseData> Generate(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Generate.{format}")] HttpRequestData req,
+            string format
         )
         {
-            _logger.LogInformation($"C# HTTP trigger function processed a request. path: {req.Path}, query: {req.QueryString}");
+            _logger.LogInformation("C# HTTP trigger function processed a request. path: {Path}, query: {Query}", req.Url.AbsolutePath, req.Url.Query);
 
-            string name = req.Query["name"];
-            var from = double.Parse(req.Query["from"]);
-            var to = double.Parse(req.Query["to"]);
+            var query = HttpUtility.ParseQueryString(req.Url.Query);
+            string name = query["name"];
+            var from = double.Parse(query["from"]);
+            var to = double.Parse(query["to"]);
             var convertFormat = (ConvertFormat)System.Enum.Parse(typeof(ConvertFormat), format, true);
-            var nan = (Nan)System.Enum.Parse(typeof(Nan), req.Query["nan"].FirstOrDefault() ?? "bai", true);
+            var nan = (Nan)System.Enum.Parse(typeof(Nan), query["nan"] ?? "bai", true);
 
             var ms = _nantoNBaiService.Generate(
-                executionContext.FunctionAppDirectory,
+                TemplateDirectory,
                 name,
-                from, 
-                to, 
+                from,
+                to,
                 nan,
                 "application/vnd.openxmlformats-officedocument.presentationml.presentation");
 
             if (convertFormat != ConvertFormat.Pptx)
             {
-                var imageFileStream = _converter.ConvertFromPptx(ms, convertFormat);
+                using var imageFileStream = _converter.ConvertFromPptx(ms, convertFormat);
                 ms.Dispose();
-                // XXX MemoryStream が返ってくることは知ってるけれどなー。byte[]返却でいいかも。
-                using var ms2 = new MemoryStream();
-                await imageFileStream.CopyToAsync(ms2);
 
-                req.HttpContext.Response.Headers.Add("Cache-Control", "public, max-age=31536000");
-                return new FileContentResult(ms2.ToArray(), convertFormat == ConvertFormat.Svg ? "image/svg+xml" : "image/png");
+                var imageResponse = req.CreateResponse(HttpStatusCode.OK);
+                imageResponse.Headers.Add("Cache-Control", CacheControl);
+                imageResponse.Headers.Add("Content-Type", convertFormat == ConvertFormat.Svg ? "image/svg+xml" : "image/png");
+                await imageFileStream.CopyToAsync(imageResponse.Body);
+                return imageResponse;
             }
 
-            req.HttpContext.Response.Headers.Add("Cache-Control", "public, max-age=31536000");
-            return new FileStreamResult(ms, "application/octet-stream")
+            using (ms)
             {
-                FileDownloadName = $"{name}.pptx"
-            };
+                var response = req.CreateResponse(HttpStatusCode.OK);
+                response.Headers.Add("Cache-Control", CacheControl);
+                response.Headers.Add("Content-Type", "application/octet-stream");
+                response.Headers.Add("Content-Disposition", ContentDisposition($"{name}.pptx"));
+                await ms.CopyToAsync(response.Body);
+                return response;
+            }
         }
 
-        [FunctionName(nameof(Viewer))]
+        [Function(nameof(Viewer))]
         [OpenApiOperation("Viewer", "Gurafu")]
         [OpenApiParameter(name: "name", In = ParameterLocation.Query, Required = true, Type = typeof(string), Description = "The **Name** parameter")]
         [OpenApiParameter(name: "from", In = ParameterLocation.Query, Required = true, Type = typeof(double), Description = "The **From** parameter")]
         [OpenApiParameter(name: "to", In = ParameterLocation.Query, Required = true, Type = typeof(double), Description = "The **To** parameter")]
         [OpenApiParameter(name: "nan", In = ParameterLocation.Query, Required = false, Type = typeof(Nan), Description = "The **Nan** parameter")]
         [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "text/html", bodyType: typeof(string))]
-        public async Task<IActionResult> Viewer(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Viewer")] HttpRequest req
+        public async Task<HttpResponseData> Viewer(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Viewer")] HttpRequestData req
         )
         {
-            _logger.LogInformation($"C# HTTP trigger function processed a request. path: {req.Path}, query: {req.QueryString}");
+            _logger.LogInformation("C# HTTP trigger function processed a request. path: {Path}, query: {Query}", req.Url.AbsolutePath, req.Url.Query);
 
-            string name = req.Query["name"];
-            var from = double.Parse(req.Query["from"]);
-            var to = double.Parse(req.Query["to"]);
-            var nan = (Nan)System.Enum.Parse(typeof(Nan), req.Query["nan"].FirstOrDefault() ?? "bai", true);
-            var bai = new Formatter().Format(from, to, nan);
+            var query = HttpUtility.ParseQueryString(req.Url.Query);
+            string name = query["name"];
+            var from = double.Parse(query["from"]);
+            var to = double.Parse(query["to"]);
+            var nan = (Nan)System.Enum.Parse(typeof(Nan), query["nan"] ?? "bai", true);
+            var bai = _formatter.Format(from, to, nan);
 
-            req.HttpContext.Response.Headers.Add("Cache-Control", "public, max-age=31536000");
+            // クエリ由来の値は HTML に直接埋め込まない (反射型 XSS 対策)
+            var encodedName = HtmlEscape(name);
+            var encodedBai = HtmlEscape(bai);
+            var encodedQueryString = HtmlEscape(req.Url.Query);
+
             // {req.Host} Funcion AppsのホストなのでCDNのホストどっかから取りたい
-            return new FileContentResult(Encoding.UTF8.GetBytes($"<html lang=\"ja\"><head>" +
+            return await Html(req, $"<html lang=\"ja\"><head>" +
                 $"<meta charset=\"UTF-8\">" +
-                $"<meta property=\"og:title\" content=\"{name}が{bai}!!!\">" +
-                $"<meta property=\"og:description\" content=\"{name}が{bai}!!!\">" +
-                $"<meta property=\"og:image\" content=\"https://n-bai.koudenpa.dev/api/Generate.png{req.QueryString}\">" +
-                $"<meta name=\"twitter:image\" content=\"https://n-bai.koudenpa.dev/api/Generate.png{req.QueryString}\">" +
+                $"<meta property=\"og:title\" content=\"{encodedName}が{encodedBai}!!!\">" +
+                $"<meta property=\"og:description\" content=\"{encodedName}が{encodedBai}!!!\">" +
+                $"<meta property=\"og:image\" content=\"https://n-bai.koudenpa.dev/api/Generate.png{encodedQueryString}\">" +
+                $"<meta name=\"twitter:image\" content=\"https://n-bai.koudenpa.dev/api/Generate.png{encodedQueryString}\">" +
                 $"<meta name=\"twitter:card\" content=\"summary_large_image\">" +
                 $"</head><body>" +
-                $"<div><img src=\"https://n-bai.koudenpa.dev/api/Generate.png{req.QueryString}\"></div>" +
+                $"<div><img src=\"https://n-bai.koudenpa.dev/api/Generate.png{encodedQueryString}\"></div>" +
                 $"<div><a href=\"https://github.com/7474/NantoNBai\">https://github.com/7474/NantoNBai</a></div>" +
-                $"</body></html>"), "text/html");
+                $"</body></html>");
         }
 
-        [FunctionName(nameof(Index))]
-        public async Task<IActionResult> Index(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Index")] HttpRequest req
+        [Function(nameof(Index))]
+        public async Task<HttpResponseData> Index(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Index")] HttpRequestData req
         )
         {
-            _logger.LogInformation($"C# HTTP trigger function processed a request. path: {req.Path}, query: {req.QueryString}");
+            _logger.LogInformation("C# HTTP trigger function processed a request. path: {Path}, query: {Query}", req.Url.AbsolutePath, req.Url.Query);
 
-            req.HttpContext.Response.Headers.Add("Cache-Control", "public, max-age=31536000");
-            return new FileContentResult(Encoding.UTF8.GetBytes($"<html lang=\"ja\"><head>" +
+            return await Html(req, $"<html lang=\"ja\"><head>" +
                 $"<meta charset=\"UTF-8\">" +
                 $"<meta property=\"og:title\" content=\"NantoNBai\">" +
                 $"<meta property=\"og:description\" content=\"なんと凄いグラフを作れます\">" +
@@ -134,8 +156,42 @@ namespace NantoNBaiFunction
                 $"<li><a href=\"https://n-bai.koudenpa.dev/api/swagger/ui\">https://n-bai.koudenpa.dev/api/swagger/ui</a></li>" +
                 $"<li><a href=\"https://github.com/7474/NantoNBai\">https://github.com/7474/NantoNBai</a></li>" +
                 $"</ul>" +
-                $"</body></html>"), "text/html"); 
+                $"</body></html>");
+        }
+
+        private static async Task<HttpResponseData> Html(HttpRequestData req, string html)
+        {
+            var response = req.CreateResponse(HttpStatusCode.OK);
+            response.Headers.Add("Cache-Control", CacheControl);
+            response.Headers.Add("Content-Type", "text/html");
+            await response.WriteBytesAsync(Encoding.UTF8.GetBytes(html));
+            return response;
+        }
+
+        // HTML の特殊文字だけをエスケープする。
+        // WebUtility.HtmlEncode は非 ASCII も数値文字参照にしてしまい、
+        // 日本語を含む既存の出力バイト列が変わってしまうため使わない。
+        private static string HtmlEscape(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return string.Empty;
+            }
+
+            return value
+                .Replace("&", "&amp;")
+                .Replace("<", "&lt;")
+                .Replace(">", "&gt;")
+                .Replace("\"", "&quot;")
+                .Replace("'", "&#39;");
+        }
+
+        // ASP.NET Core の FileStreamResult 相当のヘッダを組み立てる。
+        // ファイル名は日本語になりうるので RFC 6266 の filename* を併記する。
+        private static string ContentDisposition(string fileName)
+        {
+            var ascii = new string(fileName.Select(c => c < 0x20 || c > 0x7e || c == '"' || c == '\\' ? '_' : c).ToArray());
+            return $"attachment; filename=\"{ascii}\"; filename*=UTF-8''{Uri.EscapeDataString(fileName)}";
         }
     }
 }
-
