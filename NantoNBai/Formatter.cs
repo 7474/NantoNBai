@@ -13,7 +13,7 @@ namespace NantoNBai
             switch (format)
             {
                 case Nan.Bai:
-                    return $"{(from == 0 ? double.PositiveInfinity : Math.Floor(to / from))}倍";
+                    return $"{(from == 0 ? "∞" : Math.Floor(to / from))}倍";
                 case Nan.Pasento:
                     return $"{(Pasento(from, to))}%";
                 case Nan.Bunno:

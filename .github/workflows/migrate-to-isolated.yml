@@ -34,7 +34,7 @@ env:
   AZURE_FUNCTIONAPP_NAME: NantoNBaiFunctionW
   AZURE_FUNCTIONAPP_PACKAGE_PATH: functionapp
   CONFIGURATION: Release
-  DOTNET_CORE_VERSION: 8.0.x
+  DOTNET_CORE_VERSION: 10.0.x
   WORKING_DIRECTORY: NantoNBaiFunction
 
 jobs:
@@ -90,7 +90,7 @@ jobs:
           --settings FUNCTIONS_WORKER_RUNTIME=dotnet-isolated --output none
         if ($LASTEXITCODE -ne 0) { throw 'FUNCTIONS_WORKER_RUNTIME の設定に失敗した' }
 
-        # .NET 8 の in-process モデルを有効化する設定。分離ワーカーでは不要で、
+        # .NET の in-process モデルを有効化する設定。分離ワーカーでは不要で、
         # 残したままにすると挙動が未定義になるため削除する。
         $names = az functionapp config appsettings list `
           --name $env:APP_NAME --resource-group $env:RESOURCE_GROUP --slot $env:SLOT `

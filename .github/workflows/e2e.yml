@@ -9,7 +9,7 @@ on:
       - completed
   workflow_dispatch:
 env:
-  DOTNET_VERSION: 8.x.x
+  DOTNET_VERSION: 10.x.x
 jobs:
   e2e:
     runs-on: windows-latest
@@ -26,7 +26,7 @@ jobs:
         dotnet-version: ${{ env.DOTNET_VERSION }}
     - run: dotnet restore E2ETest/E2ETest.csproj
     - run: dotnet build E2ETest/E2ETest.csproj --no-restore
-    - run: pwsh E2ETest/bin/Debug/net8.0/playwright.ps1 install --with-deps
+    - run: pwsh E2ETest/bin/Debug/net10.0/playwright.ps1 install --with-deps
     - run: dotnet test E2ETest/E2ETest.csproj --no-build --verbosity normal
   
     - name: Check result
