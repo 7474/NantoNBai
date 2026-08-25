@@ -5,6 +5,7 @@ on:
     - master
 env:
   AZURE_FUNCTIONAPP_NAME: NantoNBaiFunctionW
+  AZURE_RESOURCE_GROUP: nanto-n-bai-w
   # 発行先はソースディレクトリと分ける。
   # 同一にすると *.cs や obj/ ごとデプロイパッケージに含まれてしまう。
   AZURE_FUNCTIONAPP_PACKAGE_PATH: functionapp
@@ -81,11 +82,11 @@ jobs:
       run: |
         az functionapp config set \
           --name ${{ env.AZURE_FUNCTIONAPP_NAME }} \
-          --resource-group nanto-n-bai-w \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
           --use-32bit-worker-process false
         az functionapp config appsettings set \
           --name ${{ env.AZURE_FUNCTIONAPP_NAME }} \
-          --resource-group nanto-n-bai-w \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
           --settings WEBSITE_USE_PLACEHOLDER_DOTNETISOLATED=1
     # E2E は CD の完了後に別ワークフローで走るため、
     # ここで最低限の疎通を確認して壊れたデプロイを早く赤くする。
