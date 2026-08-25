@@ -60,13 +60,36 @@ jobs:
           throw "発行成果物に不足がある: $($missing -join ', ')"
         }
         Write-Host '発行成果物の確認 OK'
-    - name: Ensure Azure Functions Core Tools
+    - name: Install Azure Functions Core Tools
       shell: pwsh
+      env:
+        FUNC_DIR: ${{ runner.temp }}/func-cli
       run: |
-        if (-not (Get-Command func -ErrorAction SilentlyContinue)) {
-          npm install -g azure-functions-core-tools@4 --unsafe-perm true
+        $ErrorActionPreference = 'Stop'
+        $ProgressPreference = 'SilentlyContinue'
+
+        # windows-latest に func は入っておらず、npm レジストリにも依存したくないので
+        # 公式のリリースフィードから取得してハッシュを検証する
+        $feed = Invoke-RestMethod -Uri 'https://cdn.functions.azure.com/public/cli-feed-v4.json' -TimeoutSec 120
+        $tag = $feed.tags.v4.release
+        $release = ($feed.releases.PSObject.Properties | Where-Object { $_.Name -eq $tag }).Value
+        if (-not $release) { throw "リリースフィードに $tag が無い" }
+
+        $artifact = @($release.coreTools | Where-Object { $_.OS -eq 'Windows' -and $_.Architecture -eq 'x64' })[0]
+        if (-not $artifact) { throw 'Windows x64 の Core Tools がリリースフィードに無い' }
+        Write-Host "Core Tools $tag : $($artifact.downloadLink)"
+
+        $zip = Join-Path $env:RUNNER_TEMP 'func-cli.zip'
+        Invoke-WebRequest -Uri $artifact.downloadLink -OutFile $zip -TimeoutSec 900
+
+        $actual = (Get-FileHash -Path $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+        if ($actual -ne $artifact.sha2.ToLowerInvariant()) {
+          throw "Core Tools のハッシュが一致しない: expected=$($artifact.sha2) actual=$actual"
         }
-        func --version
+
+        [System.IO.Compression.ZipFile]::ExtractToDirectory($zip, $env:FUNC_DIR)
+        $env:FUNC_DIR | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+        & (Join-Path $env:FUNC_DIR 'func.exe') --version
     - name: Start Functions host
       shell: pwsh
       env:
