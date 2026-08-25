@@ -62,10 +62,16 @@ namespace NantoNBaiFunction
 
             var query = HttpUtility.ParseQueryString(req.Url.Query);
             string name = query["name"];
-            var from = double.Parse(query["from"]);
-            var to = double.Parse(query["to"]);
-            var convertFormat = (ConvertFormat)System.Enum.Parse(typeof(ConvertFormat), format, true);
-            var nan = (Nan)System.Enum.Parse(typeof(Nan), query["nan"] ?? "bai", true);
+            if (string.IsNullOrWhiteSpace(name) ||
+                !double.TryParse(query["from"], out var from) ||
+                !double.TryParse(query["to"], out var to) ||
+                !Enum.TryParse(format, true, out ConvertFormat convertFormat) ||
+                !Enum.IsDefined(convertFormat) ||
+                !Enum.TryParse(query["nan"] ?? "bai", true, out Nan nan) ||
+                !Enum.IsDefined(nan))
+            {
+                return await BadRequest(req);
+            }
 
             var ms = _nantoNBaiService.Generate(
                 TemplateDirectory,
@@ -113,9 +119,14 @@ namespace NantoNBaiFunction
 
             var query = HttpUtility.ParseQueryString(req.Url.Query);
             string name = query["name"];
-            var from = double.Parse(query["from"]);
-            var to = double.Parse(query["to"]);
-            var nan = (Nan)System.Enum.Parse(typeof(Nan), query["nan"] ?? "bai", true);
+            if (string.IsNullOrWhiteSpace(name) ||
+                !double.TryParse(query["from"], out var from) ||
+                !double.TryParse(query["to"], out var to) ||
+                !Enum.TryParse(query["nan"] ?? "bai", true, out Nan nan) ||
+                !Enum.IsDefined(nan))
+            {
+                return await BadRequest(req);
+            }
             var bai = _formatter.Format(from, to, nan);
 
             // クエリ由来の値は HTML に直接埋め込まない (反射型 XSS 対策)
@@ -168,6 +179,13 @@ namespace NantoNBaiFunction
             response.Headers.Add("Cache-Control", CacheControl);
             response.Headers.Add("Content-Type", "text/html");
             await response.WriteBytesAsync(Encoding.UTF8.GetBytes(html));
+            return response;
+        }
+
+        private static async Task<HttpResponseData> BadRequest(HttpRequestData req)
+        {
+            var response = req.CreateResponse(HttpStatusCode.BadRequest);
+            await response.WriteStringAsync("Invalid query parameters.");
             return response;
         }
 
