@@ -46,8 +46,8 @@ sequenceDiagram
     Function->>Svg.Skia: Rasterize SVG to PNG
     Function->>CDN: "GURAFU" Image
     CDN->>UA: "GURAFU" Image
-    Note over CDN: Azure CDN
-    Note over Function: Azure Functions<br/>.NET10 分離ワーカー on Windows
+    Note over CDN: CloudFront
+    Note over Function: Azure Functions<br/>.NET10 on Windows
 ```
 
 このようなグラフの良いところの一つには、オフィスソフトで「雑に」作られたグラフであるところがあります。
