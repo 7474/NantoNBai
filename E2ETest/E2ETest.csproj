@@ -17,8 +17,8 @@
     <PackageReference Include="Microsoft.Playwright.MSTest" Version="1.63.0" />
     <PackageReference Include="coverlet.collector" Version="10.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="SkiaSharp" Version="4.152.1" />
-    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="4.152.1" />
+    <PackageReference Include="SkiaSharp" Version="4.153.0" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="4.153.0" />
   </ItemGroup>
 
   <ItemGroup>
